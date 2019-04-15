@@ -154,8 +154,7 @@ class TestJapanera(unittest.TestCase):
         eras = self.japera.era_common_daikakuji + self.japera.era_common_jimyouin
         for era in eras:
             try:
-                if era.english_head == era.english_head.lower():
-                    print(era)
+                self.assertEqual(era.english_head == era.english_head.lower())
             except:
                 pass
 

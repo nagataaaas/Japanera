@@ -310,7 +310,7 @@ class Japanera:
                   Era("弘長", "Kouchou", date(1261, 3, 29), date(1264, 4, 3), "common"),
                   Era("文永", "Bunnei", date(1264, 4, 3), date(1275, 5, 29), "common"),
                   Era("建治", "Kenji", date(1275, 5, 29), date(1278, 3, 30), "common"),
-                  Era("弘安", "kouan", date(1278, 3, 30), date(1288, 6, 5), "common"),
+                  Era("弘安", "Kouan", date(1278, 3, 30), date(1288, 6, 5), "common"),
                   Era("正応", "Syouou", date(1288, 6, 5), date(1293, 9, 13), "common"),
                   Era("永仁", "Einin", date(1293, 9, 13), date(1299, 6, 1), "common"),
                   Era("正安", "Syouan", date(1299, 6, 1), date(1302, 12, 18), "common"),

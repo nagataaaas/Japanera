@@ -150,6 +150,15 @@ class TestJapanera(unittest.TestCase):
         actual = self.japera.era_match("S", lambda x: x.english_head, lambda x, y: x == y)
         self.assertEqual({"S"}, set(map(lambda x: x.english_head, actual)))
 
+    def test_check_all_english_head_lower(self):
+        eras = self.japera.era_common_daikakuji + self.japera.era_common_jimyouin
+        for era in eras:
+            try:
+                if era.english_head == era.english_head.lower():
+                    print(era)
+            except:
+                pass
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -178,6 +178,5 @@ class TestJapanera(unittest.TestCase):
         actual = EraDate.fromdate(date(749, 5, 8)).strftime("%-E%-e%-A%-a%-o%-O")
         self.assertEqual(actual, "天平感宝TempyokampoTempyouKampouT01元")
 
-
 if __name__ == "__main__":
     unittest.main()

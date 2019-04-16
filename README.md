@@ -1,126 +1,265 @@
-# SQLAlchemy-Rope
-The Simple Thread-local Session Maker
-
-```python
-
-from sqlalchemy import Integer, Column
-from sqlalchemy.orm.session import sessionmaker
-import sqlalchemy.ext.declarative
-
-from sqlalchemy_rope import SessionJenny
-
-Base = sqlalchemy.ext.declarative.declarative_base()
-
-url = "sqlite:///database.db"
-
-
-class Database(Base):
-    __tablename__ = "database"
-    id = Column(Integer, primary_key=True)
-
-
-engine = sqlalchemy.create_engine(url)
-Base.metadata.create_all(engine)
-SessionMaker = sessionmaker(bind=engine)
-
-jenny = SessionJenny(SessionMaker)
-print(jenny.session is jenny.session)  # Now This "session" object is thread-local!!
-
-```
+Easy japanese era tool
+======================
 Powered by [Yamato Nagata](https://twitter.com/514YJ)
 
-[Simple Example](https://github.com/delta114514/SQLAlchemy-Rope/blob/master/example/example_1.py)
-
-[ReadTheDocs](https://sqlalchemy-rope.readthedocs.io/en/latest/)
-
-
-# Usage
-
-make instance of `SessionJenny` with `sessionmaker`
+[GitHub](https://github.com/delta114514/Japanera)
 
 ```python
-from sqlalchemy import Integer, Column
-from sqlalchemy.orm.session import sessionmaker
-import sqlalchemy.ext.declarative
+>>> from datetime import date
+>>> from japanera import Japanera, EraDate
 
-from sqlalchemy_rope import SessionJenny
+>>> janera = Japanera()
 
-Base = sqlalchemy.ext.declarative.declarative_base()
+>>> c_era = janera.era(date.today())
+>>> c_era == date(2019, 4, 16)
+True
 
-url = "sqlite:///database.db"
+>>> "Current Japanese Era is <{}>: <{}>".format(c_era.kanji, c_era.english)
+Current Japanese Era is <平成>: <Heisei>
 
+>>> "Current Date is <{}>".format(c_era.strftime(date(2019, 4, 16)"%-E%-O年%m月%d日"))
+Current Date is <平成31年04月16日>
 
-class Data(Base):
-    __tablename__ = "database"
-    id = Column(Integer, primary_key=True)
-
-
-engine = sqlalchemy.create_engine(url)
-Base.metadata.create_all(engine)
-SessionMaker = sessionmaker(bind=engine)
-
-jenny = SessionJenny(SessionMaker)
+>>> # Or you can do same thing in this way
+>>> "Current Date is <{}>".format(EraDate(2019, 4, 16).strftime("%-E%-O年%m月%d日"))
 ```
+Instllation
+===========
 
-now you can access `Session` object with `SessionJenny().session`
+Install with pip
+```
+   $ pip install japanera
+```
+How to Use
+=======================
+
+You can use `Japanera`, `EraDate`, `EraDateTime`.
 
 ```python
-data = Data()
+from datetime import date
+from japanera import (Japanera, EraDate, EraDateTime)
 
-jenny.session.add(data)
-jenny.session.commit()
+janera = Japanera()
 
+# era of jimyouin_tou style
+print(janera.jimyouin_era(date(1340, 1, 1)))    # 暦応: Ryakuou
+# era of daikaku_ji style
+print(janera.daikaku_era(date(1340, 1, 1)))     # 延元: Engen
+
+print(janera.era_match("R", lambda x: x.english_head, lambda x, y: x == y))
+  # [<Era 霊亀:Reiki 07/10/0715 - 28/12/0717>,
+  # <Era 暦仁:Ryakunin 06/01/1239 - 20/03/1239>,
+  # <Era 令和:Reiwa 01/05/2019 - None>,
+  # <Era 暦応:Ryakuou 19/10/1338 - 09/06/1342>]
+
+era_of_1950_1_1 = janera.era(date(1950, 1, 1))
+
+print(era_of_1950_1_1.kanji)                    # 昭和
+print(era_of_1950_1_1.english)                  # Shouwa
+print(era_of_1950_1_1.english_shorten_vowel)    # Showa
+print(era_of_1950_1_1.english_head)             # S
+print(era_of_1950_1_1.start)                    # datetime.date(1926, 12, 25)
+print(era_of_1950_1_1.end)                      # datetime.date(1989, 1, 8)
+print(era_of_1950_1_1._in(date(1950, 1, 1)))    # True
+print(era_of_1950_1_1.strftime(date(1950, 5, 1),
+           "%-E%-O年%m月%d日"))                # 昭和25年05月01日
+print(repr(era_of_1950_1_1.strptime(
+   "昭和25年05月01日", "%-E%-O年%m月%d日")))    # datetime.datetime(1950, 5, 1, 0, 0)
+
+eradate = EraDate(1420, 5, 6)
+   # or EraDate.fromdate(datetime.date(1420, 5, 6))
+
+print(eradate.era.kanji)                        # 応永
+print(eradate.strftime("%-E%-O年%m月%d日"))     # 応永27年05月06日
+
+eradatetime = EraDateTime(1420, 5, 6)
+   # or EraDateTime.fromdatetime(datetime.datetime(1420, 5, 6))
+
+print(eradatetime.era.kanji)                    # 応永
+print(eradatetime.strftime("%-E%-O年%m月%d日"))  # 応永27年05月06日
 ```
-# How This Works?
+Documentation
+=============
+
+`Japanera(primary="daikakuji")`
+======================================
+- `primary`: which style do you prefer want to get `daikakuji` style or `jimyouin` style. This will be set to `self.primary` Default: `"daikakuji"`
+
+`Japanera().era(dt, use_chris=True)`
+-------------------------------------------
+- `dt`: `datetime.date`, `datetime.datetime`, `japanera.EraDate` or `japanera.EraDateTime`.
+- `use_chris`: `bool`, If True, return `self.christ_ad` if there is no `japanera.Era` match
+
+Returns one matched `japanera.Era` object with considering `self.primary`
+
+`Japanera().era_match(value, key=lambda x: x, cmp=lambda x, y: x._in(y), error="warn")`
+----------------------------------------------------------------------------------------------
+Return all `japanera.Era` objects stored in `self.era_common`, `self.era_daikakuji` or `self.era_jimyouin` which `cmp(key(Era), value)` is `True`.
+
+if `key` is not provided, `key` is `lambda x: x`
+
+if `cmp` is not provided, `cmp` is `lambda x, y: x._in(y)`
+
+`error` sets error level
+   - `"ignore"`: ignore all errors occurred while running compare
+   - `"warn"`: just warn error - default
+   - `"raise"`: raise any errors
+
+Default, this will return all `japanera.Era` which contains given `value` (which must be instance of `datetime.date`) in them.
+
+`Japanera().strftime(dt, fmt, _type=None, allow_before=False, use_chris=True)`
+-------------------------------------------------------------------------------------
+
+- `dt`: instance of `datetime.date`.
+- `fmt`: format.
+- `allow_before`: object can be converted to `bool`. If it's `True` and the given `dt` if before than `self,start`, `%-o` and `%-O` will be `"Unknown"`. If `False`, raise an `ValueError` Default: `False`
+- `use_chris`: `bool`, If `True`, use `self.christ_ad` if there is no `japanera.Era` match. Default: `True`
 
 
-## Making `SessionRope`
-`SessionJenny` object make `SessionRope` object when you call or use attribute of `SessionJenny.rope`
+**format**
 
-And `SessionJenny.session` returns `SessionJenny.rope.session`, So using `SessionJenny.session` also makes `SessionRope` object.
+- `%-E`: Kanji era name
+- `%-e`: Alphabet era name vowel shortened
+- `%-A`: Alphabet era name
+- `%-a`: First letter of alphabet era name
+- `%-o`: Two digit year of corresponding era
+- `%-O`: Two digit year of corresponding era. But return "元" for the first year
+- and `datetime.datetime.strftime`'s format
 
-Where the `SessionRope` object go? It's set as the local variable of first outer scope of `SessionJenny` automatically. variable's name will be the return value of `SessionJenny.create_rope_name()`
+`Japanera().daikaku_era(dt, use_chris=True)`
+---------------------------------------------------
+- `dt`: instance of `datetime.date`.
+- `use_chris`: `bool`. If `True`, return `self.christ_ad` if there is no `japanera.Era`
 
-If you want to set explicitly, call `SessionJenny.set_rope(frame=None)`. if `frame` is given, `SessionRope` will be set as local variable of `frame`, or not, set as the local variable of first outer scope of `SessionJenny`.
+Return matched `japanera.Era` in `Japanera.era_common_daikakuji`
 
-## Calling `SessionRope`
-`SessionJenny` object has `_ropes` attribute. This is `WeakValueDictionary` which key is `SessionJenny.create_rope_name()`, value is `SessionRope` made by using `SessionJenny.rope` or `SessionJenny.session`.
+`Japanera().jimyouin_era(dt, use_chris=True)`
+---------------------------------------------------
+- `dt`: instance of `datetime.date`.
+- `use_chris`: `bool`. If `True`, return `self.christ_ad` if there is no `japanera.Era`
 
-Every time you use `SessionJenny.rope` or `SessionJenny.session`, `SessionJenny` will make `SessionRope` if there is no `SessionJenny` object stored in `SessionJenny._ropes` which key is `SessionJenny.create_rope_name()`.
+Return matched `japanera.Era` in `Japanera.era_common_jimyouin`
 
-## Exiting Scope
-`SessionJenny` object make `SessionRope` object as local variable. So, when exiting scope(finish running function/generator/coroutine), `SessionRope` object will be deleted.
+`EraDate(year, month=None, day=None, era=None, use_chris=True)`
+======================================================================
+- `year`, `month`, `day`: All must be acceptable value for `datetime.date`
+- `era`: instance of `japanera.Era`. If not provided, find by `japanera.Japanera(self, use_chris)`
+- `use_chris`: `bool`
 
-`SessionRope` object run `SessionRope.remove()` which is same as `SQLAlchemy.orm.scoping.scoped_session.remove()`.
+Return `japanera.EraDate` object.
 
-# Documentation
+`EraDate().strftime(fmt, allow_before=False)`
+----------------------------------------------------
+- `fmt`: format.
+- `allow_before`: object can be converted to `bool`. If it's `True` and the given `dt` if before than `self,start`, `%-o` and `%-O` will be `"Unknown"`. If `False`, raise an `ValueError` Default: `False`
 
-### SessionJenny(session_factory, scopefunc=None)
-Initialize `SessionJenny`. All arguments will be passed to `SQLAlchemy.orm.scoping.scoped_session`
+**format**
 
-### SessionJenny._rope_name_callback
-settable callback returns `str` which will be `SessionRope` variable's name. This has to be callable. Default is `None`
+- `%-E`: Kanji era name
+- `%-e`: Alphabet era name vowel shortened
+- `%-A`: Alphabet era name
+- `%-a`: First letter of alphabet era name
+- `%-o`: Two digit year of corresponding era
+- `%-O`: Two digit year of corresponding era. But return "元" for the first year
+- and `datetime.date.strftime`'s format
 
-### SessionJenny.set_rope(frame=None)
-Create `SessionRope` object and set as local variable to `frame.f_locals` if frame is provided. Otherwise, first outer scope of `SessionJenny`.
+`EraDate().fromdate(dt, era=None, use_chris=True)`
+---------------------------------------------------------
+- `dt`: instance of `datetime.date`
+- `era`: instance of `japanera.Era`
+- `use_chris`: `bool`
 
-### SessionJenny.rope
-Create `SessionRope` object and set as local variable to first outer scope of `SessionJenny` if there is no `SessionJenny` object stored in `SessionJenny._ropes` which key is `SessionJenny.create_rope_name()`. And return `SessionRope` object.
+Return `EraData(year=dt.year, month=dt.month, day=dt.day, era=era, use_chris=use_chris)`
 
-### SessionJenny.session
-Return `SessionJenny.rope.session`
+`EraDate().todate()`
+---------------------------
+Return `datetime.date` object have same time information
 
-### SessionJenny.remove(rope_name=None)
-Do as `SQLAlchemy.orm.scoping.scoped_session.remove()`.
-And remove data stored in `SessionJenny._ropes` which key is `rope_name` if `rope_name` provided. Otherwise, `SessionJenny._ropes` which key is `SessionJenny.create_rope_name()` will be deleted.
+`EraDateTime(year, month=None, day=None, hour=0, minute=0, second=0, microsecond=0, tzinfo=None, *, fold=0, era=None, use_chris=True)`
+=============================================================================================================================================
+- `year`, `month`, `day`, `hour`, `minute`, `second`, `microsecond`, `tzinfo`, `fold`: All must be acceptable value for `datetime.date`
+- `era`: instance of `japanera.Era`. If not provided, find by `japanera.Japanera(self, use_chris)`
+- `use_chris`: `bool`
 
-### SessionRope(registry)
-In usual use, I recommend to use `SessionJenny`, not `SessionRope`.
-But if you want to create `SessionRope` explicitly, Use this.
-register must be an instance of `ScopedRegistry` or `ThreadLocalRegistry`
+Return `japanera.EraDateTime` object.
 
-### SessionRope.session
-Return `self.registry()`
+`EraDateTime().strftime(fmt, allow_before=False)`
+--------------------------------------------------------
+- `fmt`: format.
+- `allow_before`: object can be converted to `bool`. If it's `True` and the given `dt` if before than `self,start`, `%-o` and `%-O` will be `"Unknown"`. If `False`, raise an `ValueError` Default: `False`
 
-### SessionRope.remove()
-Do as `SQLAlchemy.orm.scoping.scoped_session.remove()`.
+**format**
+
+- `%-E`: Kanji era name
+- `%-e`: Alphabet era name vowel shortened
+- `%-A`: Alphabet era name
+- `%-a`: First letter of alphabet era name
+- `%-o`: Two digit year of corresponding era
+- `%-O`: Two digit year of corresponding era. But return "元" for the first year
+- and `datetime.datetime.strftime`'s format
+
+`EraDate().fromdatetime(dtt, era=None, use_chris=True)`
+--------------------------------------------------------------
+- `dtt`: instance of `datetime.datetime`
+- `era`: instance of `japanera.Era`
+- `use_chris`: `bool`
+
+Return `EraDateTime(year=dtt.year, month=dtt.month, day=dtt.day, hour=dtt.hour, minute=dtt.minute, second=dtt.second, microsecond=dtt.microsecond, tzinfo=dtt.tzinfo, fold=dtt.fold, era=era, use_chris=use_chris)`
+
+`EraDateTime().todatetime()`
+-----------------------------------
+Return `datetime.datetime` object have same time information
+
+`Era(kanji, english, start, end, _type)`
+===============================================
+- `kanji` - `str`: kanji letter of era. exp. "大正"
+- `english` - `str`: english letter of pronunciation of era. exp. "Taishou"
+- `start` - `datetime.date`: start of the era. This day is included to this era.
+- `datetime.date`: end of the era. This day is excluded to this era.
+- `_type` - `str`: Type of This Era. `"common"`, `"daikakuji"`, `"jimyouin"`  or `"christian"`
+
+`Era().english_shorten_vowel`
+------------------------------------
+Return `self.english` vowel shortened. exp. "Taishou" -> "Taisho"
+
+`Era().english_head`
+--------------------------
+Return the first letter of `self.english`
+
+`Era()._in(dt)`
+----------------------
+Return `dt` object is in between `self.start` and `self.end`. (`self.start` is included, `self.end` is excluded)
+
+`Era().is_after(other)`
+------------------------------
+Return if other(instance of `datetime.date`) is before than `self.start` or other(instance of `japanera.Era`)'s `end` is before than `self.start`
+
+`Era().is_before(other)`
+------------------------------
+Return if other(instance of `datetime.date`) is after than `self.end` or other(instance of `japanera.Era`)'s `start` is after than `self.end`
+
+
+`Era().strftime(dt, fmt, allow_before=False)`
+--------------------------------------------------------
+- `dt`: instance of `datetime.date`
+- `fmt`: format.
+- `allow_before`: object can be converted to `bool`. If it's `True` and the given `dt` if before than `self,start`, `%-o` and `%-O` will be `"Unknown"`. If `False`, raise an `ValueError` Default: `False`
+
+**format**
+
+- `%-E`: Kanji era name
+- `%-e`: Alphabet era name vowel shortened
+- `%-A`: Alphabet era name
+- `%-a`: First letter of alphabet era name
+- `%-o`: Two digit year of corresponding era
+- `%-O`: Two digit year of corresponding era. But return "元" for the first year
+- and `datetime.datetime.strftime`'s format
+
+`Era().strptime(_str, fmt)`
+----------------------------------
+Return `datetime.datetime` that returns `_str` with `fmt` by running `Era().strftime(RESULT, fmt)`
+
+In End
+======
+Sorry for my poor English.
+I want **you** to join us and send many pull requests about Doc, code, features and more!!

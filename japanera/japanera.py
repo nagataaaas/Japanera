@@ -12,10 +12,10 @@ locale.setlocale(locale.LC_ALL, '')
 
 
 class EraDate(datetime.date):
-    def __new__(cls, year, month=None, day=None, era=None):
+    def __new__(cls, year, month=None, day=None, era=None, use_chris=True):
         self = super().__new__(cls, year, month, day)
         if not era:
-            self.era = Japanera().era(self)
+            self.era = Japanera().era(self, use_chris)
         else:
             self.era = era
         if self.era.is_after(self):
@@ -28,16 +28,17 @@ class EraDate(datetime.date):
         %-e: Alphabet era name vowel shortened
         %-A: Alphabet era name
         %-a: First letter of alphabet era name
-        %-o: Year of corresponding era
-        %-O: Year of corresponding era. But return "元" for the first year
+        %-o: Two digit year of corresponding era
+        %-O: Two digit year of corresponding era. But return "元" for the first year
         + datetime.strftime's format
 
-        allow_before: object can be converted to bool. If it's true and the given dt if before than self,start,
+        allow_before: object can be converted to bool. If it's True and the given dt if before than self,start,
                      %-o and %-O will be "Unknown". If False, raise an ValueError. Default: False
         """
         try:
             year = self.year - self.era.start.year + 1
-            rep = {"%-E": self.era.kanji, "%-e": self.era.english_shorten_vowel, "%-A": self.era.english, "%-a": self.era.english[0],
+            rep = {"%-E": self.era.kanji, "%-e": self.era.english_shorten_vowel, "%-A": self.era.english,
+                   "%-a": self.era.english[0],
                    "%-o": str(year % 100).zfill(2),
                    "%-O": "元" if year == 1 else str(year % 100).zfill(2)}
         except AttributeError:
@@ -55,10 +56,10 @@ class EraDate(datetime.date):
         return datetime.datetime.strftime(self, pattern.sub(lambda m: rep[re.escape(m.group(0))], fmt))
 
     @classmethod
-    def fromdate(cls, dt, era=None):
+    def fromdate(cls, dt, era=None, use_chris=True):
         if not era:
             era = Japanera().era(dt)
-        return cls(year=dt.year, month=dt.month, day=dt.day, era=era)
+        return cls(year=dt.year, month=dt.month, day=dt.day, era=era, use_chris=use_chris)
 
     def todate(self):
         return datetime.date(year=self.year, month=self.month, day=self.day)
@@ -72,11 +73,11 @@ class EraDate(datetime.date):
 
 class EraDateTime(datetime.datetime):
     def __new__(cls, year, month=None, day=None, hour=0, minute=0, second=0,
-                microsecond=0, tzinfo=None, *, fold=0, era=None):
+                microsecond=0, tzinfo=None, *, fold=0, era=None, use_chris=True):
         self = super().__new__(cls, year=year, month=month, day=day, hour=hour, minute=minute, second=second,
                                microsecond=microsecond, tzinfo=tzinfo, fold=fold)
         if not era:
-            self.era = Japanera().era(self)
+            self.era = Japanera().era(self, use_chris)
         else:
             self.era = era
         if self.era.is_after(self):
@@ -89,16 +90,17 @@ class EraDateTime(datetime.datetime):
         %-e: Alphabet era name vowel shortened
         %-A: Alphabet era name
         %-a: First letter of alphabet era name
-        %-o: Year of corresponding era
-        %-O: Year of corresponding era. But return "元" for the first year
+        %-o: Two digit year of corresponding era
+        %-O: Two digit year of corresponding era. But return "元" for the first year
         + datetime.strftime's format
 
-        allow_before: object can be converted to bool. If it's true and the given dt if before than self,start,
+        allow_before: object can be converted to bool. If it's True and the given dt if before than self,start,
                      %-o and %-O will be "Unknown". If False, raise an ValueError. Default: False
         """
         try:
             year = self.year - self.era.start.year + 1
-            rep = {"%-E": self.era.kanji, "%-e": self.era.english_shorten_vowel, "%-A": self.era.english, "%-a": self.era.english[0],
+            rep = {"%-E": self.era.kanji, "%-e": self.era.english_shorten_vowel, "%-A": self.era.english,
+                   "%-a": self.era.english[0],
                    "%-o": str(year % 100).zfill(2),
                    "%-O": "元" if year == 1 else str(year % 100).zfill(2)}
         except AttributeError:
@@ -116,14 +118,15 @@ class EraDateTime(datetime.datetime):
         return datetime.datetime.strftime(self, pattern.sub(lambda m: rep[re.escape(m.group(0))], fmt))
 
     @classmethod
-    def fromdatetime(cls, dtt, era=None):
+    def fromdatetime(cls, dtt, era=None, use_chris=True):
         if not era:
             era = Japanera().era(dtt)
         return cls(year=dtt.year, month=dtt.month, day=dtt.day, hour=dtt.hour, minute=dtt.minute, second=dtt.second,
-                   microsecond=dtt.microsecond, tzinfo=dtt.tzinfo, fold=dtt.fold, era=era)
+                   microsecond=dtt.microsecond, tzinfo=dtt.tzinfo, fold=dtt.fold, era=era, use_chris=use_chris)
 
-    def todate(self):
-        return datetime.date(year=self.year, month=self.month, day=self.day)
+    def todatetime(self):
+        return datetime.datetime(year=self.year, month=self.month, day=self.day, hour=self.hour, minute=self.minute,
+                                 second=self.second, microsecond=self.microsecond, tzinfo=self.tzinfo, fold=self.fold)
 
     def __repr__(self):
         return "Era.eradate({}, {}, {}, {}, {}, {}, {}, {})".format(self.era, self.year, self.month, self.day,
@@ -142,7 +145,7 @@ class Era:
         :param english - str: english letter of pronunciation of era. exp. "Taishou"
         :param start - datetime.date: start of the era. This day is included to this era.
         :param end - datetime.date: end of the era. This day is excluded to this era.
-        :param _type:
+        :param _type - str: Type of This Era. "common", "daikakuji", "jimyouin"  or "christian"
         """
         self.kanji = kanji
         self.english = english
@@ -182,7 +185,7 @@ class Era:
         :param dt: datetime.date or datetime.datetime
         :return: bool
         """
-        if type(dt) is datetime.datetime:
+        if isinstance(dt, datetime.datetime):
             dt = dt.date()
         if self.start and self.end:
             return self.start <= dt < self.end
@@ -214,14 +217,16 @@ class Era:
         %-e: Alphabet era name vowel shortened
         %-A: Alphabet era name
         %-a: First letter of alphabet era name
-        %-o: Year of corresponding era
-        %-O: Year of corresponding era. But return "元" for the first year
+        %-o: Two digit year of corresponding era
+        %-O: Two digit year of corresponding era. But return "元" for the first year
         + datetime.strftime's format
 
-        allow_before: object can be converted to bool. If it's true and the given dt if before than self,start,
+        allow_before: object can be converted to bool. If it's True and the given dt if before than self,start,
                      %-o and %-O will be "Unknown". If False, raise an ValueError. Default: False
         """
-        return EraDate(year=dt.year, month=dt.month, day=dt.day, era=self).strftime(fmt, allow_before)
+        if isinstance(dt, datetime.datetime):
+             return EraDateTime.fromdatetime(dt, self).strftime(fmt, allow_before)
+        return EraDate.fromdate(dt, self).strftime(fmt, allow_before)
 
     def strptime(self, _str, fmt):
         """
@@ -229,8 +234,8 @@ class Era:
         %-e: Alphabet era name vowel shortened
         %-A: Alphabet era name
         %-a: First letter of alphabet era name
-        %-o: Year of corresponding era
-        %-O: Year of corresponding era. But return "元" for the first year
+        %-o: Two digit year of corresponding era
+        %-O: Two digit year of corresponding era. But return "元" for the first year
         + datetime.strftime's format
         """
         try:
@@ -546,6 +551,8 @@ class Japanera:
                     Era("明徳", "Meitoku", datetime.date(1390, 4, 20), datetime.date(1394, 8, 10), "jimyouin")
                     ]
 
+    christ_ad = Era("西暦", "Seireki", datetime.date(1, 1, 1), None, "christian")
+
     era_common_daikakuji = sorted(era_common + era_daikakuji)
     era_common_jimyouin = sorted(era_common + era_jimyouin)
 
@@ -554,20 +561,32 @@ class Japanera:
             raise ValueError("only 'daikakuji' or 'jimyouin' are acceptable for argument 'primary'")
         self.primary = primary
 
-    def era(self, dt):
+    def era(self, dt, use_chris=True):
+        """
+        Returns one matched japanera.Era object with considering self.primary
+        if use_chris, return
+        """
         if self.primary == "daikakuji":
             ind = bisect_right(self.era_common_daikakuji, dt)
             if ind == 0:
+                if use_chris:
+                    return self.christ_ad
                 return None
             if self.era_common_daikakuji[ind - 1]._in(dt):
                 return self.era_common_daikakuji[ind - 1]
+            if use_chris:
+                return self.christ_ad
             return None
         else:
             ind = bisect_right(self.era_common_jimyouin, dt)
             if ind == 0:
+                if use_chris:
+                    return self.christ_ad
                 return None
             if self.era_common_jimyouin[ind - 1]._in(dt):
                 return self.era_common_jimyouin[ind - 1]
+            if use_chris:
+                return self.christ_ad
             return None
 
     def era_match(self, value, key=lambda x: x, cmp=lambda x, y: x._in(y), error="warn"):
@@ -596,41 +615,50 @@ class Japanera:
                     raise
         return eras
 
-    def strftime(self, dt, fmt, _type=None, allow_before=False):
+    def strftime(self, dt, fmt, _type=None, allow_before=False, use_chris=True):
         """
         %-E: Kanji era name
         %-e: Alphabet era name vowel shortened
         %-A: Alphabet era name
         %-a: First letter of alphabet era name
-        %-o: Year of corresponding era
-        %-O: Year of corresponding era. But return "元" for the first year
+        %-o: Two digit year of corresponding era
+        %-O: Two digit year of corresponding era. But return "元" for the first year
         + datetime.strftime's format
 
-        allow_before: object can be converted to bool. If it's true and the given dt if before than self,start,
+        allow_before: object can be converted to bool. If it's True and the given dt if before than self,start,
                      %-o and %-O will be "Unknown". If False, raise an ValueError Default: False
+        use_chris: bool, If True, use self.christ_ad if there is no japanera.Era match
         """
         if not _type:
-            era = self.era(dt)
+            era = self.era(dt, use_chris)
         elif _type == "daikakuji":
-            era = self.daikaku_era(dt)
+            era = self.daikaku_era(dt, use_chris)
         elif _type == "jimyouin":
-            era = self.jimyouin_era(dt)
+            era = self.jimyouin_era(dt, use_chris)
         else:
             raise ValueError("_type must be 'daikakuji' or 'jimyouin'")
         return era.strftime(dt, fmt, allow_before)
 
-    def daikaku_era(self, dt):
+    def daikaku_era(self, dt, use_chris=True):
         ind = bisect_right(self.era_common_daikakuji, dt)
         if ind == 0:
+            if use_chris:
+                return self.christ_ad
             return None
         if self.era_common_daikakuji[ind - 1]._in(dt):
             return self.era_common_daikakuji[ind - 1]
+        if use_chris:
+            return self.christ_ad
         return None
 
-    def jimyouin_era(self, dt):
+    def jimyouin_era(self, dt, use_chris=True):
         ind = bisect_right(self.era_common_jimyouin, dt)
         if ind == 0:
+            if use_chris:
+                return self.christ_ad
             return None
         if self.era_common_jimyouin[ind - 1]._in(dt):
             return self.era_common_jimyouin[ind - 1]
+        if use_chris:
+            return self.christ_ad
         return None

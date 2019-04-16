@@ -1,24 +1,33 @@
-.. SQLAlchemy-Rope documentation master file, created by
+.. -*- coding: utf-8; -*-
+
+.. Japanera documentation master file, created by
    sphinx-quickstart on Sun Feb 24 01:43:54 2019.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-The Simple Thread-local Session Maker
-=====================================
+Easy japanese era tool
+======================
 |image1| |image2|
 
-.. |image1| image:: https://img.shields.io/pypi/v/sqlalchemy-rope.svg
-   :target: https://pypi.org/project/responder/
-.. |image2| image:: https://img.shields.io/pypi/l/sqlalchemy-rope.svg
-   :target: https://pypi.org/project/responder/
+.. |image1| image:: https://img.shields.io/pypi/v/japanera.svg
+   :target: https://pypi.org/project/japanera/
+.. |image2| image:: https://img.shields.io/pypi/l/japanera.svg
+   :target: https://pypi.org/project/japanera/
 
 Powered by `Yamato Nagata <https://twitter.com/514YJ>`_.
 
-SQLAlchemy-Rope provides simple thread-local session maker for SQLAlchemy.
-`Github <https://github.com/delta114514/SQLAlchemy-Rope>`_ --
-`Simple example <https://github.com/delta114514/SQLAlchemy-Rope/blob/master/example/example_2.py>`_
+.. code:: python
 
-   I recommend to use :code:`sqlalchemy.orm.scoping.scoped_session` explicitly. There is some possibility of :code:`SessionJenny` dirty your code. This library is only for lazy people just like me.
+   from datetime import date
+
+   from japanera import Japanera
+
+   janera = Japanera()
+   c_era = janera.era(date.today())
+   # c_era == date(2019, 4, 16)
+
+   print("Current Japanese Era is <{}>: <{}>".format(c_era.kanji, c_era.english))
+   # Current Japanese Era is <平成>: <Heisei>
 
 .. contents::
    :local:

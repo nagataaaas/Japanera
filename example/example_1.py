@@ -25,6 +25,7 @@ japera = Japanera()
 [out] format: [yyyy-mm-dd]
 
 """
+print("Current Japanese Era is <{}>: <{}>".format(c_era.kanji, c_era.english))
 
 while True:
     print("Input the date you want to know how to say in Japanese!\nformat: [yyyy-mm-dd]")

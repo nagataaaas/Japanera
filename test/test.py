@@ -86,6 +86,10 @@ class TestJapanera(unittest.TestCase):
             self.japera.era(date(1500, 1, 1)).strftime(date(1500, 1, 1), "%-E%-o年%m月%d日"), "%-E%-o年%m月%d日").date()
         self.assertEqual(date(1500, 1, 1), actual)
 
+    def test_strptime_japanera(self):
+        actual = self.japera.strptime("平成31年04月16日", "%-E%-O年%m月%d日")
+        self.assertEqual([datetime(2019, 4, 16, 0, 0)], actual)
+
     def test_in_first_day(self):
         actual = self.japera.era(date(729, 9, 7))._in(date(729, 9, 6))
         self.assertTrue(actual)

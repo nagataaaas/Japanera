@@ -32,7 +32,7 @@ Powered by `Yamato Nagata <https://twitter.com/514YJ>`_.
    >>> "Current Japanese Era is <{}>: <{}>".format(c_era.kanji, c_era.english)
    Current Japanese Era is <平成>: <Heisei>
 
-   >>> "Current Date is <{}>".format(c_era.strftime(date(2019, 4, 16)"%-E%-O年%m月%d日"))
+   >>> "Current Date is <{}>".format(c_era.strftime(date(2019, 4, 16), "%-E%-O年%m月%d日"))
    Current Date is <平成31年04月16日>
 
    >>> # Or you can do same thing in this way
@@ -145,6 +145,13 @@ Default, this will return all :code:`japanera.Era` which contains given :code:`v
 - :code:`%-o`: Two digit year of corresponding era
 - :code:`%-O`: Two digit year of corresponding era. But return "元" for the first year
 - and :code:`datetime.datetime.strftime`'s format
+
+:code:`Japanera().strptime(_str, fmt)`
+-------------------------------------------------------------------------------------
+
+Return list of all :code:`datetime.datetime` that returns :code:`_str` with :code:`fmt` by running :code:`Era().strftime(RESULT, fmt)`
+
+    *return list is not the always only one value. There is possibility you get multiple.*
 
 :code:`Japanera().daikaku_era(dt, use_chris=True)`
 ---------------------------------------------------

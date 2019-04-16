@@ -639,6 +639,45 @@ class Japanera:
             raise ValueError("_type must be 'daikakuji' or 'jimyouin'")
         return era.strftime(dt, fmt, allow_before)
 
+    def strptime(self, _str, fmt):
+        """
+        %-E: Kanji era name
+        %-e: Alphabet era name vowel shortened
+        %-A: Alphabet era name
+        %-a: First letter of alphabet era name
+        %-o: Two digit year of corresponding era
+        %-O: Two digit year of corresponding era. But return "元" for the first year
+        + datetime.strftime's format
+        """
+        eras = self.era_common + self.era_jimyouin + self.era_daikakuji + [self.christ_ad]
+        result = []
+        for era in eras:
+            __str, _fmt = _str, fmt
+            try:
+                rep = {"%-E": era.kanji, "%-A": era.english, "%-a": era.english[0],
+                       "%-s": era.english_shorten_vowel}
+            except TypeError:
+                rep = {"%-E": "不明", "%-A": "Unknown", "%-a": "U", "%-s": "Unknown"}
+
+            rep = dict((re.escape(k), str(v)) for k, v in rep.items())
+            pattern = re.compile("|".join(rep.keys()))
+
+            _fmt = pattern.sub(lambda m: rep[re.escape(m.group(0))], _fmt)
+
+            if "%-O" in _fmt:
+                _fmt = _fmt.replace("元", "01")
+                __str = __str.replace("元", "01")
+
+            _fmt = re.compile("%-[oO]").sub(lambda m: "%y", _fmt)
+            try:
+                dt = datetime.datetime.strptime(__str, _fmt)
+            except ValueError:
+                continue
+            if _str == dt.strftime(_fmt):
+                result.append(dt.replace(year=(dt.year % 100) + era.start.year - 1))
+        return result
+
+
     def daikaku_era(self, dt, use_chris=True):
         ind = bisect_right(self.era_common_daikakuji, dt)
         if ind == 0:

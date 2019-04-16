@@ -72,6 +72,9 @@ You can use :code:`Japanera`, :code:`EraDate`, :code:`EraDateTime`.
       # <Era 令和:Reiwa 01/05/2019 - None>,
       # <Era 暦応:Ryakuou 19/10/1338 - 09/06/1342>]
 
+   print(janera.strptime("昭和25年05月01日",
+           "%-E%-O年%m月%d日"))                # [datetime.datetime(1950, 5, 1, 0, 0)]
+
    era_of_1950_1_1 = janera.era(date(1950, 1, 1))
 
    print(era_of_1950_1_1.kanji)                    # 昭和

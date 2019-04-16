@@ -11,7 +11,7 @@ Powered by [Yamato Nagata](https://twitter.com/514YJ)
 >>> janera = Japanera()
 
 >>> c_era = janera.era(date.today())
->>> c_era == date(2019, 4, 16)
+>>> c_era._in(date(2019, 4, 16))
 True
 
 >>> "Current Japanese Era is <{}>: <{}>".format(c_era.kanji, c_era.english)

@@ -1,7 +1,3 @@
 .idea
 .pypirc
 japanera/__pycache__
-example/templates
-example/static
-example/data.db
-SQLAlchemy_Rope.egg-info

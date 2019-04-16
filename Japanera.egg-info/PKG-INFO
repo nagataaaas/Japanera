@@ -1,0 +1,21 @@
+Metadata-Version: 1.1
+Name: Japanera
+Version: 0.0.1
+Summary: Easy japanese era tool
+Home-page: https://github.com/delta114514/Japanera
+Author: Yamato Nagata
+Author-email: chickenwingswillfly@gmail.com
+License: MIT
+Description: 
+        SQLAlchemy-Rope
+        -----------
+        This module provides easy wrapper for thread-local SQLAlchemy session
+        
+Platform: any
+Classifier: Development Status :: 3 - Alpha
+Classifier: Environment :: Other Environment
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python
+Classifier: Topic :: Software Development :: Libraries :: Python Modules

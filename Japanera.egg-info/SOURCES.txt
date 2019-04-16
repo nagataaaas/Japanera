@@ -1,0 +1,11 @@
+README.md
+setup.py
+Japanera.egg-info/PKG-INFO
+Japanera.egg-info/SOURCES.txt
+Japanera.egg-info/dependency_links.txt
+Japanera.egg-info/not-zip-safe
+Japanera.egg-info/top_level.txt
+japanera/__about__.py
+japanera/__init__.py
+japanera/japanera.py
+test/test.py

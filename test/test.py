@@ -16,8 +16,12 @@ class TestJapanera(unittest.TestCase):
     japera = Japanera()
 
     def test_before_era(self):
-        actual = self.japera.era(date(645, 7, 19))
+        actual = self.japera.era(date(645, 7, 19), False)
         self.assertEqual(None, actual)
+
+    def test_before_era_chris(self):
+        actual = self.japera.era(date(645, 7, 19)).kanji
+        self.assertEqual("西暦", actual)
 
     def test_start_of_era(self):
         actual = self.japera.era(date(645, 7, 20))

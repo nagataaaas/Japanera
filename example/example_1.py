@@ -36,5 +36,5 @@ while True:
         continue
     try:
         print("-" * 5, japera.strftime(_date, "%-E%-O年%m月%d日"), "-" * 5)
-    except ValueError:
+    except AttributeError:
         print("We don't have japanese era for given date...")

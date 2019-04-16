@@ -8,10 +8,12 @@
 """
 
 from .__about__ import __version__
-from .japanera import (Japanera, Era)
+from .japanera import (Japanera, Era, EraDate, EraDateTime)
 
 __all__ = [
     __version__,
     "Japanera",
-    "Era"
+    "Era",
+    "EraDate",
+    "EraDateTime",
 ]

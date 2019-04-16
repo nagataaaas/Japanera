@@ -1,6 +1,6 @@
-__title__ = "japanera"
+__title__ = "Japanera"
 __description__ = "Easy japanese era tool"
-__url__ = "https://github.com/delta114514/japanera"
+__url__ = "https://github.com/delta114514/Japanera"
 __version_info__ = ("0", "0", "1")
 __version__ = ".".join(__version_info__)
 __author__ = "Yamato Nagata"

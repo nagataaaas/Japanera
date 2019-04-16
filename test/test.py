@@ -1,11 +1,11 @@
 import unittest
 import sys
 
-from datetime import date
+from datetime import date, datetime
 
 sys.path.append('../japanera')
 
-from japanera import Japanera, Era
+from japanera import Japanera, Era, EraDate, EraDateTime
 
 
 class TestJapanera(unittest.TestCase):
@@ -154,9 +154,29 @@ class TestJapanera(unittest.TestCase):
         eras = self.japera.era_common_daikakuji + self.japera.era_common_jimyouin
         for era in eras:
             try:
-                self.assertEqual(era.english_head == era.english_head.lower())
+                self.assertEqual(era.english_head, era.english_head.lower())
             except:
                 pass
+
+    def test_eradate(self):
+        Era("天平", "Tempyou", date(729, 9, 6), date(749, 5, 8), "common")
+        era = self.japera.era(date(730, 1, 1))
+        test_eradate = EraDate.fromdate(date(730, 5, 2), era)
+        self.assertEqual(test_eradate.era, era)
+
+    def test_EraDate(self):
+        era = EraDate.fromdate(date(2020, 1, 1))
+        self.assertEqual(era.era.kanji, "令和")
+        self.assertEqual(str(era), "令和-2020-01-01")
+
+    def test_EraDateTime(self):
+        era = EraDateTime.fromdatetime(datetime(2019, 1, 1, 1, 1))
+        self.assertEqual(era.era.kanji, "平成")
+        self.assertEqual(str(era), "平成-2019-01-01 01:01:00")
+
+    def test_EraDatetime_strftime(self):
+        actual = EraDate.fromdate(date(749, 5, 8)).strftime("%-E%-e%-A%-a%-o%-O")
+        self.assertEqual(actual, "天平感宝TempyokampoTempyouKampouT01元")
 
 
 if __name__ == "__main__":

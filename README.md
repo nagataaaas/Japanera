@@ -3,6 +3,7 @@ Easy japanese era tool
 Powered by [Yamato Nagata](https://twitter.com/514YJ)
 
 [GitHub](https://github.com/delta114514/Japanera)
+[ReadTheDocs](https://japanera.readthedocs.io/en/latest/)
 
 ```python
 >>> from datetime import date

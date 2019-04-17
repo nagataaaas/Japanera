@@ -1,14 +1,11 @@
 # -*- coding: utf-8 -*-
 
 import re
-import locale
 
 import datetime
 
 from warnings import warn
 from bisect import bisect_right
-
-locale.setlocale(locale.LC_ALL, '')
 
 
 class EraDate(datetime.date):

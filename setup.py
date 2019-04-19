@@ -45,15 +45,17 @@ setup(name=about["__title__"],
       author_email=about["__author_email__"],
       description=about["__description__"],
       long_description=__doc__,
+      install_requires=["kanjize"],
       packages=["japanera"],
       zip_safe=False,
       platforms="any",
       classifiers=[
-          "Development Status :: 3 - Alpha",
+          "Development Status :: 4 - Beta",
           "Environment :: Other Environment",
           "Intended Audience :: Developers",
           "License :: OSI Approved :: MIT License",
           "Operating System :: OS Independent",
+          "Programming Language :: Python :: 3",
           "Programming Language :: Python",
           "Topic :: Software Development :: Libraries :: Python Modules"
       ])

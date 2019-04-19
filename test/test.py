@@ -3,7 +3,6 @@ import sys
 
 from datetime import date, datetime
 
-sys.path.append('../japanera')
 
 from japanera import Japanera, Era, EraDate, EraDateTime
 
@@ -186,5 +185,27 @@ class TestJapanera(unittest.TestCase):
         actual = EraDate.fromdate(date(749, 5, 8)).strftime("%-E%-e%-A%-a%-o%-O")
         self.assertEqual(actual, "天平感宝TempyokampoTempyouKampouT01元")
 
+    def test_japanera_strptime(self):
+        actual = self.japera.strptime("平成三十一年四月十九日", "%-E%-kO年%-km月%-kd日")
+        self.assertEqual(actual, [datetime(2019, 4, 19)])
+
+    def test_japanera_strftime(self):
+        actual = self.japera.strftime(datetime(2019, 4, 19), "%-E%-kO年%-km月%-kd日")
+        self.assertEqual(actual, "平成三十一年四月十九日")
+
+    def test_eradate_strftime(self):
+        actual = EraDate(2019, 4, 19).strftime("%-E%-kO年%-km月%-kd日")
+        self.assertEqual(actual, "平成三十一年四月十九日")
+
+    def test_strftime_yyyy(self):
+        actual = EraDate(2002, 4, 19).strftime("%-E%Y年%-km月%-kd日")
+        self.assertEqual(actual, "平成2002年四月十九日")
+
+    def test_strptime_yyyy(self):
+        actual = self.japera.strptime("平成2002年四月十九日", "%-E%Y年%-km月%-kd日")
+        self.assertEqual(actual, [datetime(2002, 4, 19)])
+
+
 if __name__ == "__main__":
+
     unittest.main()

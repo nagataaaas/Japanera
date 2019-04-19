@@ -7,6 +7,8 @@ import datetime
 from warnings import warn
 from bisect import bisect_right
 
+from kanjize import kanji2int, int2kanji
+
 
 class EraDate(datetime.date):
     def __new__(cls, year, month=None, day=None, era=None, use_chris=True):
@@ -27,6 +29,10 @@ class EraDate(datetime.date):
         %-a: First letter of alphabet era name
         %-o: Two digit year of corresponding era
         %-O: Two digit year of corresponding era. But return "元" for the first year
+        %-ko: Two digit year of corresponding era in Kanji
+        %-kO: Two digit year of corresponding era in Kanji. But return "元" for the first year
+        %-km: Month of date in Kanji
+        %-kd: Day of date in Kanji
         + datetime.strftime's format
 
         allow_before: object can be converted to bool. If it's True and the given dt if before than self,start,
@@ -35,18 +41,23 @@ class EraDate(datetime.date):
         try:
             year = self.year - self.era.start.year + 1
             rep = {"%-E": self.era.kanji, "%-e": self.era.english_shorten_vowel, "%-A": self.era.english,
-                   "%-a": self.era.english[0],
-                   "%-o": str(year % 100).zfill(2),
-                   "%-O": "元" if year == 1 else str(year % 100).zfill(2)}
-        except AttributeError:
+                   "%-a": self.era.english[0], "%-o": str(year % 100).zfill(2),
+                   "%-O": "元" if year == 1 else str(year % 100).zfill(2), "%-ko": int2kanji(year % 100),
+                   "%-kO": "元" if year == 1 else int2kanji(year % 100), "%-km": int2kanji(self.month),
+                   "%-kd": int2kanji(self.day)}
+        except (AttributeError, TypeError):
             try:
                 rep = {"%-E": "不明", "%-e": "Unknown", "%-A": "Unknown", "%-a": "U", "%-o": str(year % 100).zfill(2),
-                       "%-O": "元" if year == 1 else str(year % 100).zfill(2)}
+                       "%-O": "元" if year == 1 else str(year % 100).zfill(2), "%-ko": int2kanji(year % 100),
+                       "%-kO": "元" if year == 1 else int2kanji(year % 100), "%-km": int2kanji(self.month),
+                       "%-kd": int2kanji(self.day)}
             except (AttributeError, UnboundLocalError):
                 if not allow_before:
                     raise ValueError("Given date is too early to format")
                 rep = {"%-E": "不明", "%-e": "Unknown", "%-A": "Unknown", "%-a": "U", "%-o": "Unknown",
-                       "%-O": "Unknown"}
+                       "%-O": "Unknown", "%-ko": "不明",
+                       "%-kO": "不明", "%-km": "不明",
+                       "%-kd": "不明"}
 
         rep = dict((re.escape(k), str(v)) for k, v in rep.items())
         pattern = re.compile("|".join(rep.keys()))
@@ -89,6 +100,10 @@ class EraDateTime(datetime.datetime):
         %-a: First letter of alphabet era name
         %-o: Two digit year of corresponding era
         %-O: Two digit year of corresponding era. But return "元" for the first year
+        %-ko: Two digit year of corresponding era in Kanji
+        %-kO: Two digit year of corresponding era in Kanji. But return "元" for the first year
+        %-km: Month of date in Kanji
+        %-kd: Day of date in Kanji
         + datetime.strftime's format
 
         allow_before: object can be converted to bool. If it's True and the given dt if before than self,start,
@@ -97,18 +112,23 @@ class EraDateTime(datetime.datetime):
         try:
             year = self.year - self.era.start.year + 1
             rep = {"%-E": self.era.kanji, "%-e": self.era.english_shorten_vowel, "%-A": self.era.english,
-                   "%-a": self.era.english[0],
-                   "%-o": str(year % 100).zfill(2),
-                   "%-O": "元" if year == 1 else str(year % 100).zfill(2)}
-        except AttributeError:
+                   "%-a": self.era.english[0], "%-o": str(year % 100).zfill(2),
+                   "%-O": "元" if year == 1 else str(year % 100).zfill(2), "%-ko": int2kanji(year % 100),
+                   "%-kO": "元" if year == 1 else int2kanji(year % 100), "%-km": int2kanji(self.month),
+                   "%-kd": int2kanji(self.day)}
+        except (AttributeError, TypeError):
             try:
                 rep = {"%-E": "不明", "%-e": "Unknown", "%-A": "Unknown", "%-a": "U", "%-o": str(year % 100).zfill(2),
-                       "%-O": "元" if year == 1 else str(year % 100).zfill(2)}
+                       "%-O": "元" if year == 1 else str(year % 100).zfill(2), "%-ko": int2kanji(year % 100),
+                       "%-kO": "元" if year == 1 else int2kanji(year % 100), "%-km": int2kanji(self.month),
+                       "%-kd": int2kanji(self.day)}
             except (AttributeError, UnboundLocalError):
                 if not allow_before:
                     raise ValueError("Given date is too early to format")
                 rep = {"%-E": "不明", "%-e": "Unknown", "%-A": "Unknown", "%-a": "U", "%-o": "Unknown",
-                       "%-O": "Unknown"}
+                       "%-O": "Unknown", "%-ko": "不明",
+                       "%-kO": "不明", "%-km": "不明",
+                       "%-kd": "不明"}
 
         rep = dict((re.escape(k), str(v)) for k, v in rep.items())
         pattern = re.compile("|".join(rep.keys()))
@@ -216,13 +236,17 @@ class Era:
         %-a: First letter of alphabet era name
         %-o: Two digit year of corresponding era
         %-O: Two digit year of corresponding era. But return "元" for the first year
+        %-ko: Two digit year of corresponding era in Kanji
+        %-kO: Two digit year of corresponding era in Kanji. But return "元" for the first year
+        %-km: Month of date in Kanji
+        %-kd: Day of date in Kanji
         + datetime.strftime's format
 
         allow_before: object can be converted to bool. If it's True and the given dt if before than self,start,
                      %-o and %-O will be "Unknown". If False, raise an ValueError. Default: False
         """
         if isinstance(dt, datetime.datetime):
-             return EraDateTime.fromdatetime(dt, self).strftime(fmt, allow_before)
+            return EraDateTime.fromdatetime(dt, self).strftime(fmt, allow_before)
         return EraDate.fromdate(dt, self).strftime(fmt, allow_before)
 
     def strptime(self, _str, fmt):
@@ -233,12 +257,24 @@ class Era:
         %-a: First letter of alphabet era name
         %-o: Two digit year of corresponding era
         %-O: Two digit year of corresponding era. But return "元" for the first year
+        %-ko: Two digit year of corresponding era in Kanji
+        %-kO: Two digit year of corresponding era in Kanji. But return "元" for the first year
+        %-km: Month of date in Kanji
+        %-kd: Day of date in Kanji
         + datetime.strftime's format
         """
         try:
-            rep = {"%-E": self.kanji, "%-A": self.english, "%-a": self.english[0], "%-s": self.english_shorten_vowel}
+            rep = {"%-E": self.kanji, "%-A": self.english, "%-a": self.english[0], "%-s": self.english_shorten_vowel,
+                   "%-ko": "%y", "%-kO": "%y", "%-km": "%m", "%-kd": "%d"}
         except TypeError:
-            rep = {"%-E": "不明", "%-A": "Unknown", "%-a": "U", "%-s": "Unknown"}
+            rep = {"%-E": "不明", "%-A": "Unknown", "%-a": "U", "%-s": "Unknown",
+                   "%-ko": "%y", "%-kO": "%y", "%-km": "%m", "%-kd": "%d"}
+
+        kanjis = re.compile("[一二三四五六七八九十百千万億兆京垓𥝱]+").findall(_str)
+        int_from_kanji = [*map(lambda x: str(kanji2int(x)).zfill(2), kanjis)]
+        for k, i in zip(kanjis, int_from_kanji):
+            _str = _str.replace(k, str(i))
+            fmt = fmt.replace(k, str(i))
 
         rep = dict((re.escape(k), str(v)) for k, v in rep.items())
         pattern = re.compile("|".join(rep.keys()))
@@ -251,7 +287,9 @@ class Era:
 
         fmt = re.compile("%-[oO]").sub(lambda m: "%y", fmt)
         dt = datetime.datetime.strptime(_str, fmt)
-        return dt.replace(year=(dt.year % 100) + self.start.year - 1)
+        if "%y" in fmt:
+            dt = dt.replace(year=(dt.year % 100) + self.start.year - 1)
+        return dt
 
     def __gt__(self, other):
         if isinstance(other, Era):
@@ -620,6 +658,10 @@ class Japanera:
         %-a: First letter of alphabet era name
         %-o: Two digit year of corresponding era
         %-O: Two digit year of corresponding era. But return "元" for the first year
+        %-ko: Two digit year of corresponding era in Kanji
+        %-kO: Two digit year of corresponding era in Kanji. But return "元" for the first year
+        %-km: Month of date in Kanji
+        %-kd: Day of date in Kanji
         + datetime.strftime's format
 
         allow_before: object can be converted to bool. If it's True and the given dt if before than self,start,
@@ -644,6 +686,10 @@ class Japanera:
         %-a: First letter of alphabet era name
         %-o: Two digit year of corresponding era
         %-O: Two digit year of corresponding era. But return "元" for the first year
+        %-ko: Two digit year of corresponding era in Kanji
+        %-kO: Two digit year of corresponding era in Kanji. But return "元" for the first year
+        %-km: Month of date in Kanji
+        %-kd: Day of date in Kanji
         + datetime.strftime's format
         """
         eras = self.era_common + self.era_jimyouin + self.era_daikakuji + [self.christ_ad]
@@ -652,9 +698,18 @@ class Japanera:
             __str, _fmt = _str, fmt
             try:
                 rep = {"%-E": era.kanji, "%-A": era.english, "%-a": era.english[0],
-                       "%-s": era.english_shorten_vowel}
+                       "%-s": era.english_shorten_vowel,
+                       "%-ko": "%y", "%-kO": "%y", "%-km": "%m", "%-kd": "%d"}
             except TypeError:
-                rep = {"%-E": "不明", "%-A": "Unknown", "%-a": "U", "%-s": "Unknown"}
+                rep = {"%-E": "不明", "%-A": "Unknown", "%-a": "U", "%-s": "Unknown",
+                       "%-ko": "%y", "%-kO": "%y", "%-km": "%m", "%-kd": "%d"}
+
+            kanjis = re.compile("[一二三四五六七八九十百千万億兆京垓𥝱]+").findall(__str)
+            int_from_kanji = [*map(lambda x: str(kanji2int(x)).zfill(2), kanjis)]
+
+            for k, i in zip(kanjis, int_from_kanji):
+                __str = __str.replace(k, str(i))
+                _fmt = _fmt.replace(k, str(i))
 
             rep = dict((re.escape(k), str(v)) for k, v in rep.items())
             pattern = re.compile("|".join(rep.keys()))
@@ -668,12 +723,13 @@ class Japanera:
             _fmt = re.compile("%-[oO]").sub(lambda m: "%y", _fmt)
             try:
                 dt = datetime.datetime.strptime(__str, _fmt)
+                if "%y" in _fmt:
+                    dt = dt.replace(year=era.start.year + dt.year % 100 - 1)
             except ValueError:
                 continue
-            if _str == dt.strftime(_fmt):
-                result.append(dt.replace(year=(dt.year % 100) + era.start.year - 1))
+            if _str == EraDateTime.fromdatetime(dt).strftime(fmt):
+                result.append(dt)
         return result
-
 
     def daikaku_era(self, dt, use_chris=True):
         ind = bisect_right(self.era_common_daikakuji, dt)

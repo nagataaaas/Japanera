@@ -18,6 +18,8 @@ Powered by `Yamato Nagata <https://twitter.com/514YJ>`_.
 
 `GitHub <https://github.com/delta114514/Japanera>`_
 
+All Information's source is `Wikipedia Page <(https://ja.wikipedia.org/wiki/%E5%85%83%E5%8F%B7%E4%B8%80%E8%A6%A7_(%E6%97%A5%E6%9C%AC)>`_
+
 .. code:: python
 
    >>> from datetime import date
@@ -32,8 +34,8 @@ Powered by `Yamato Nagata <https://twitter.com/514YJ>`_.
    >>> "Current Japanese Era is <{}>: <{}>".format(c_era.kanji, c_era.english)
    Current Japanese Era is <平成>: <Heisei>
 
-   >>> "Current Date is <{}>".format(c_era.strftime(date(2019, 4, 16), "%-E%-O年%m月%d日"))
-   Current Date is <平成31年04月16日>
+   >>> "Current Date is <{}>".format(c_era.strftime(date(2019, 4, 16), "%-E%-kO年%-km月%-kd日"))
+   Current Date is <平成三十一年四月十六日>
 
    >>> # Or you can do same thing in this way
    >>> "Current Date is <{}>".format(EraDate(2019, 4, 16).strftime("%-E%-O年%m月%d日"))
@@ -72,6 +74,9 @@ You can use :code:`Japanera`, :code:`EraDate`, :code:`EraDateTime`.
       # <Era 令和:Reiwa 01/05/2019 - None>,
       # <Era 暦応:Ryakuou 19/10/1338 - 09/06/1342>]
 
+   print(janera.strptime("平成三十一年四月十九日", "%-E%-kO年%-km月%-kd日"))
+      # [datetime(2019, 4, 19, 0, 0, 0)]
+
    print(janera.strptime("昭和25年05月01日",
            "%-E%-O年%m月%d日"))                # [datetime.datetime(1950, 5, 1, 0, 0)]
 
@@ -86,8 +91,12 @@ You can use :code:`Japanera`, :code:`EraDate`, :code:`EraDateTime`.
    print(era_of_1950_1_1._in(date(1950, 1, 1)))    # True
    print(era_of_1950_1_1.strftime(date(1950, 5, 1),
                "%-E%-O年%m月%d日"))                # 昭和25年05月01日
+   print(era_of_1950_1_1.strftime(date(1950, 5, 1),
+               "%-E%-kO年%-km月%-kd日"))                # 昭和二十五年五月一日
    print(repr(era_of_1950_1_1.strptime(
        "昭和25年05月01日", "%-E%-O年%m月%d日")))    # datetime.datetime(1950, 5, 1, 0, 0)
+   print(repr(era_of_1950_1_1.strptime(
+       "昭和二十五年五月一日", "%-E%-kO年%-km月%-kd日")))    # datetime.datetime(1950, 5, 1, 0, 0)
 
    eradate = EraDate(1420, 5, 6)
        # or EraDate.fromdate(datetime.date(1420, 5, 6))
@@ -147,6 +156,10 @@ Default, this will return all :code:`japanera.Era` which contains given :code:`v
 - :code:`%-a`: First letter of alphabet era name
 - :code:`%-o`: Two digit year of corresponding era
 - :code:`%-O`: Two digit year of corresponding era. But return "元" for the first year
+- :code:`%-ko`: Two digit year of corresponding era in Kanji
+- :code:`%-kO`: Two digit year of corresponding era in Kanji. But return "元" for the first year
+- :code:`%-km`: Month of date in Kanji
+- :code:`%-kd`: Day of date in Kanji
 - and :code:`datetime.datetime.strftime`'s format
 
 :code:`Japanera().strptime(_str, fmt)`
@@ -191,6 +204,10 @@ Return :code:`japanera.EraDate` object.
 - :code:`%-a`: First letter of alphabet era name
 - :code:`%-o`: Two digit year of corresponding era
 - :code:`%-O`: Two digit year of corresponding era. But return "元" for the first year
+- :code:`%-ko`: Two digit year of corresponding era in Kanji
+- :code:`%-kO`: Two digit year of corresponding era in Kanji. But return "元" for the first year
+- :code:`%-km`: Month of date in Kanji
+- :code:`%-kd`: Day of date in Kanji
 - and :code:`datetime.date.strftime`'s format
 
 :code:`EraDate().fromdate(dt, era=None, use_chris=True)`
@@ -226,6 +243,10 @@ Return :code:`japanera.EraDateTime` object.
 - :code:`%-a`: First letter of alphabet era name
 - :code:`%-o`: Two digit year of corresponding era
 - :code:`%-O`: Two digit year of corresponding era. But return "元" for the first year
+- :code:`%-ko`: Two digit year of corresponding era in Kanji
+- :code:`%-kO`: Two digit year of corresponding era in Kanji. But return "元" for the first year
+- :code:`%-km`: Month of date in Kanji
+- :code:`%-kd`: Day of date in Kanji
 - and :code:`datetime.datetime.strftime`'s format
 
 :code:`EraDate().fromdatetime(dtt, era=None, use_chris=True)`
@@ -283,6 +304,10 @@ Return if other(instance of :code:`datetime.date`) is after than :code:`self.end
 - :code:`%-a`: First letter of alphabet era name
 - :code:`%-o`: Two digit year of corresponding era
 - :code:`%-O`: Two digit year of corresponding era. But return "元" for the first year
+- :code:`%-ko`: Two digit year of corresponding era in Kanji
+- :code:`%-kO`: Two digit year of corresponding era in Kanji. But return "元" for the first year
+- :code:`%-km`: Month of date in Kanji
+- :code:`%-kd`: Day of date in Kanji
 - and :code:`datetime.datetime.strftime`'s format
 
 :code:`Era().strptime(_str, fmt)`

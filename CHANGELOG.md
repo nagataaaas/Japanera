@@ -1,3 +1,6 @@
+# v0.0.5
+- Fixed The bug `strptime` don't return collect result when "%-kO" in `fmt`
+
 # v0.0.4
 - Added `%-kO`, `%-ko`, `%-km` and `%-kd` directive to every `strftime` and `strptime`. It's so useful to use Kainji-Number.
 

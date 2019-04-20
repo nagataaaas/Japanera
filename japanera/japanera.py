@@ -270,6 +270,10 @@ class Era:
             rep = {"%-E": "不明", "%-A": "Unknown", "%-a": "U", "%-s": "Unknown",
                    "%-ko": "%y", "%-kO": "%y", "%-km": "%m", "%-kd": "%d"}
 
+        if "%-O" in fmt or "%-kO" in fmt:
+            fmt = fmt.replace("元", "01")
+            _str = _str.replace("元", "01")
+
         kanjis = re.compile("[一二三四五六七八九十百千万億兆京垓𥝱]+").findall(_str)
         int_from_kanji = [*map(lambda x: str(kanji2int(x)).zfill(2), kanjis)]
         for k, i in zip(kanjis, int_from_kanji):
@@ -281,9 +285,6 @@ class Era:
 
         fmt = pattern.sub(lambda m: rep[re.escape(m.group(0))], fmt)
 
-        if "%-O" in fmt:
-            fmt = fmt.replace("元", "01")
-            _str = _str.replace("元", "01")
 
         fmt = re.compile("%-[oO]").sub(lambda m: "%y", fmt)
         dt = datetime.datetime.strptime(_str, fmt)
@@ -716,7 +717,7 @@ class Japanera:
 
             _fmt = pattern.sub(lambda m: rep[re.escape(m.group(0))], _fmt)
 
-            if "%-O" in _fmt:
+            if "%-O" in _fmt or "%-kO":
                 _fmt = _fmt.replace("元", "01")
                 __str = __str.replace("元", "01")
 

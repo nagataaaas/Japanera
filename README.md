@@ -138,7 +138,7 @@ Default, this will return all `japanera.Era` which contains given `value` (which
 - `%-a`: First letter of alphabet era name
 - `%-o`: Two digit year of corresponding era
 - `%-O`: Two digit year of corresponding era. But return "元" for the first year
--　`%-ko`: Two digit year of corresponding era in Kanji
+- `%-ko`: Two digit year of corresponding era in Kanji
 - `%-kO`: Two digit year of corresponding era in Kanji. But return "元" for the first year
 - `%-km`: Month of date in Kanji
 - `%-kd`: Day of date in Kanji
@@ -188,7 +188,7 @@ Return `japanera.EraDate` object.
 - `%-a`: First letter of alphabet era name
 - `%-o`: Two digit year of corresponding era
 - `%-O`: Two digit year of corresponding era. But return "元" for the first year
--　`%-ko`: Two digit year of corresponding era in Kanji
+- `%-ko`: Two digit year of corresponding era in Kanji
 - `%-kO`: Two digit year of corresponding era in Kanji. But return "元" for the first year
 - `%-km`: Month of date in Kanji
 - `%-kd`: Day of date in Kanji
@@ -227,7 +227,7 @@ Return `japanera.EraDateTime` object.
 - `%-a`: First letter of alphabet era name
 - `%-o`: Two digit year of corresponding era
 - `%-O`: Two digit year of corresponding era. But return "元" for the first year
--　`%-ko`: Two digit year of corresponding era in Kanji
+- `%-ko`: Two digit year of corresponding era in Kanji
 - `%-kO`: Two digit year of corresponding era in Kanji. But return "元" for the first year
 - `%-km`: Month of date in Kanji
 - `%-kd`: Day of date in Kanji
@@ -288,7 +288,7 @@ Return if other(instance of `datetime.date`) is after than `self.end` or other(i
 - `%-a`: First letter of alphabet era name
 - `%-o`: Two digit year of corresponding era
 - `%-O`: Two digit year of corresponding era. But return "元" for the first year
--　`%-ko`: Two digit year of corresponding era in Kanji
+- `%-ko`: Two digit year of corresponding era in Kanji
 - `%-kO`: Two digit year of corresponding era in Kanji. But return "元" for the first year
 - `%-km`: Month of date in Kanji
 - `%-kd`: Day of date in Kanji

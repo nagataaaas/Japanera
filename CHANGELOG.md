@@ -1,3 +1,6 @@
+# v0.0.6
+- Bug fix
+
 # v0.0.5
 - Fixed The bug `strptime` don't return collect result when "%-kO" in `fmt`
 

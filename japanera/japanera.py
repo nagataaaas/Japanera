@@ -265,9 +265,9 @@ class Era:
         """
         try:
             rep = {"%-E": self.kanji, "%-A": self.english, "%-a": self.english[0], "%-s": self.english_shorten_vowel,
-                   "%-ko": "%y", "%-kO": "%y", "%-km": "%m", "%-kd": "%d"}
+                   "%-o": "%y", "%-O": "%y", "%-ko": "%y", "%-kO": "%y", "%-km": "%m", "%-kd": "%d"}
         except TypeError:
-            rep = {"%-E": "不明", "%-A": "Unknown", "%-a": "U", "%-s": "Unknown",
+            rep = {"%-E": "不明", "%-A": "Unknown", "%-a": "U", "%-s": "Unknown", "%-o": "%y", "%-O": "%y",
                    "%-ko": "%y", "%-kO": "%y", "%-km": "%m", "%-kd": "%d"}
 
         if "%-O" in fmt or "%-kO" in fmt:
@@ -282,11 +282,8 @@ class Era:
 
         rep = dict((re.escape(k), str(v)) for k, v in rep.items())
         pattern = re.compile("|".join(rep.keys()))
-
         fmt = pattern.sub(lambda m: rep[re.escape(m.group(0))], fmt)
 
-
-        fmt = re.compile("%-[oO]").sub(lambda m: "%y", fmt)
         dt = datetime.datetime.strptime(_str, fmt)
         if "%y" in fmt:
             dt = dt.replace(year=(dt.year % 100) + self.start.year - 1)
@@ -699,14 +696,19 @@ class Japanera:
             __str, _fmt = _str, fmt
             try:
                 rep = {"%-E": era.kanji, "%-A": era.english, "%-a": era.english[0],
-                       "%-s": era.english_shorten_vowel,
-                       "%-ko": "%y", "%-kO": "%y", "%-km": "%m", "%-kd": "%d"}
+                       "%-s": era.english_shorten_vowel, "%-o": "%y", "%-O": "%y", "%-ko": "%y", "%-kO": "%y",
+                       "%-km": "%m", "%-kd": "%d",
+                       }
             except TypeError:
-                rep = {"%-E": "不明", "%-A": "Unknown", "%-a": "U", "%-s": "Unknown",
+                rep = {"%-E": "不明", "%-A": "Unknown", "%-a": "U", "%-s": "Unknown", "%-o": "%y", "%-O": "%y",
                        "%-ko": "%y", "%-kO": "%y", "%-km": "%m", "%-kd": "%d"}
 
             kanjis = re.compile("[一二三四五六七八九十百千万億兆京垓𥝱]+").findall(__str)
             int_from_kanji = [*map(lambda x: str(kanji2int(x)).zfill(2), kanjis)]
+
+            if "%-O" in fmt or "%-kO" in fmt:
+                _fmt = _fmt.replace("元", "01")
+                __str = __str.replace("元", "01")
 
             for k, i in zip(kanjis, int_from_kanji):
                 __str = __str.replace(k, str(i))
@@ -714,14 +716,8 @@ class Japanera:
 
             rep = dict((re.escape(k), str(v)) for k, v in rep.items())
             pattern = re.compile("|".join(rep.keys()))
-
             _fmt = pattern.sub(lambda m: rep[re.escape(m.group(0))], _fmt)
 
-            if "%-O" in _fmt or "%-kO":
-                _fmt = _fmt.replace("元", "01")
-                __str = __str.replace("元", "01")
-
-            _fmt = re.compile("%-[oO]").sub(lambda m: "%y", _fmt)
             try:
                 dt = datetime.datetime.strptime(__str, _fmt)
                 if "%y" in _fmt:

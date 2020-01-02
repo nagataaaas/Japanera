@@ -544,7 +544,7 @@ class Japanera:
                   Era("元治", "Genji", datetime.date(1864, 3, 27), datetime.date(1865, 5, 1), "common"),
                   Era("慶応", "Keiou", datetime.date(1865, 5, 1), datetime.date(1868, 10, 23), "common"),
                   Era("明治", "Meiji", datetime.date(1868, 1, 23), datetime.date(1912, 7, 30), "common"),
-                  Era("大正", "Taishou", datetime.date(1912, 7, 30), datetime.date(1926, 12, 24), "common"),
+                  Era("大正", "Taishou", datetime.date(1912, 7, 30), datetime.date(1926, 12, 25), "common"),
                   Era("昭和", "Shouwa", datetime.date(1926, 12, 25), datetime.date(1989, 1, 8), "common"),
                   Era("平成", "Heisei", datetime.date(1989, 1, 8), datetime.date(2019, 5, 1), "common"),
                   Era("令和", "Reiwa", datetime.date(2019, 5, 1), None, "common")

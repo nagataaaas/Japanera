@@ -1,3 +1,6 @@
+# 0.0.7
+- Bug fix about end date of "大正" era.
+
 # v0.0.6
 - Bug fix
 

@@ -1,6 +1,6 @@
-Metadata-Version: 1.1
+Metadata-Version: 2.1
 Name: Japanera
-Version: 0.0.6
+Version: 0.0.7
 Summary: Easy japanese era tool
 Home-page: https://github.com/delta114514/Japanera
 Author: Yamato Nagata
@@ -8,7 +8,7 @@ Author-email: chickenwingswillfly@gmail.com
 License: MIT
 Description: 
         Easy japanese era tool
-        -----------
+        ----------------------
         Powered by [Yamato Nagata](https://twitter.com/514YJ)
         
         [GitHub](https://github.com/delta114514/Japanera)
@@ -44,3 +44,4 @@ Classifier: Operating System :: OS Independent
 Classifier: Programming Language :: Python :: 3
 Classifier: Programming Language :: Python
 Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Description-Content-Type: text/markdown

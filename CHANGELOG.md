@@ -1,3 +1,6 @@
+# 0.0.8
+- Fixed bug that leap year could not be parsed properly.
+
 # 0.0.7
 - Bug fix about end date of "大正" era.
 

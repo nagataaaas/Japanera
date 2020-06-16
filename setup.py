@@ -1,6 +1,6 @@
 """
 Easy japanese era tool
------------
+----------------------
 Powered by [Yamato Nagata](https://twitter.com/514YJ)
 
 [GitHub](https://github.com/delta114514/Japanera)
@@ -45,6 +45,7 @@ setup(name=about["__title__"],
       author_email=about["__author_email__"],
       description=about["__description__"],
       long_description=__doc__,
+      long_description_content_type="text/markdown",
       install_requires=["kanjize"],
       packages=["japanera"],
       zip_safe=False,

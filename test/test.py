@@ -205,6 +205,14 @@ class TestJapanera(unittest.TestCase):
         actual = self.japera.strptime("平成2002年四月十九日", "%-E%Y年%-km月%-kd日")
         self.assertEqual(actual, [datetime(2002, 4, 19)])
 
+    def test_leap_kanji(self):
+        actual = self.japera.strptime("令和02年02月29日", "%-E%-O年%m月%d日")
+        self.assertEqual(actual, [datetime(2020, 2, 29)])
+
+    def test_leap_chris(self):
+        actual = self.japera.strptime("西暦2004年02月29日", "%-E%Y年%m月%d日")
+        self.assertEqual(actual, [datetime(2004, 2, 29)])
+
 
 if __name__ == "__main__":
 

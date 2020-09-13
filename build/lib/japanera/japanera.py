@@ -967,8 +967,8 @@ class Japanera:
                 dt = datetime.datetime(*time_)
             except ValueError:
                 continue
-
-            result.append(dt)
+            if _str == EraDateTime.fromdatetime(dt, era=era).strftime(fmt):
+                result.append(dt)
         return result
 
     def daikaku_era(self, dt, use_chris=True):

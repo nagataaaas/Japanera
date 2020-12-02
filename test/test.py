@@ -63,6 +63,10 @@ class TestJapanera(unittest.TestCase):
         actual = self.japera.jimyouin_era(date(2019, 5, 1)).strftime(date(2019, 5, 1), "%-E%-o年%m月%d日")
         self.assertEqual("令和01年05月01日", actual)
 
+    def test_strftime_future_o_single_digit_year(self):
+        actual = [datetime(2019, 5, 1, 0, 0)]
+        self.assertEqual(self.japera.strptime("令和1年05月01日", "%-E%-o年%m月%d日"), actual)
+
     def test_strftime_future_O_first_year(self):
         actual = self.japera.jimyouin_era(date(2019, 5, 1)).strftime(date(2019, 5, 1), "%-E%-O年%m月%d日")
         self.assertEqual("令和元年05月01日", actual)

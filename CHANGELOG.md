@@ -1,3 +1,9 @@
+# 1.0.1
+- Now this can parse single digit year.
+
+# 1.0.0
+- Fixed bug that unable to parse single-digit months or dates
+
 # 0.0.8
 - Fixed bug that leap year could not be parsed properly.
 

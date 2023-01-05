@@ -1,337 +1,14 @@
 # -*- coding: utf-8 -*-
-import calendar
-import re
-
-from _strptime import (_calc_julian_from_U_or_W, _calc_julian_from_V, _cache_lock, _getlang, datetime_date, _CACHE_MAX_SIZE,
-                       _regex_cache, _strptime_datetime, LocaleTime, re_escape, IGNORECASE, re_compile)
-import time
-
 import datetime
-
-from warnings import warn
+import re
+import warnings
 from bisect import bisect_right
+from typing import Union
+from warnings import warn
 
-from kanjize import kanji2int, int2kanji
+from kanjize import kanji2number, number2kanji
 
-class TimeRE(dict):
-    """Handle conversion from format directives to regexes."""
-
-    def __init__(self, locale_time=None):
-        """Create keys/values.
-
-        Order of execution is important for dependency reasons.
-
-        """
-        if locale_time:
-            self.locale_time = locale_time
-        else:
-            self.locale_time = LocaleTime()
-        base = super()
-        base.__init__({
-            # The " [1-9]" part of the regex is to make %c from ANSI C work
-            'd': r"(?P<d>3[0-1]|[1-2]\d|0[1-9]|[1-9]| [1-9])",
-            'f': r"(?P<f>[0-9]{1,6})",
-            'H': r"(?P<H>2[0-3]|[0-1]\d|\d)",
-            'I': r"(?P<I>1[0-2]|0[1-9]|[1-9])",
-            'G': r"(?P<G>\d\d\d\d)",
-            'j': r"(?P<j>36[0-6]|3[0-5]\d|[1-2]\d\d|0[1-9]\d|00[1-9]|[1-9]\d|0[1-9]|[1-9])",
-            'm': r"(?P<m>1[0-2]|0[1-9]|[1-9])",
-            'M': r"(?P<M>[0-5]\d|\d)",
-            'S': r"(?P<S>6[0-1]|[0-5]\d|\d)",
-            'U': r"(?P<U>5[0-3]|[0-4]\d|\d)",
-            'w': r"(?P<w>[0-6])",
-            'u': r"(?P<u>[1-7])",
-            'V': r"(?P<V>5[0-3]|0[1-9]|[1-4]\d|\d)",
-            # W is set below by using 'U'
-            'y': r"(?P<y>\d\d|\d)",
-            #XXX: Does 'Y' need to worry about having less or more than
-            #     4 digits?
-            'Y': r"(?P<Y>\d\d\d\d)",
-            'z': r"(?P<z>[+-]\d\d:?[0-5]\d(:?[0-5]\d(\.\d{1,6})?)?|Z)",
-            'A': self.__seqToRE(self.locale_time.f_weekday, 'A'),
-            'a': self.__seqToRE(self.locale_time.a_weekday, 'a'),
-            'B': self.__seqToRE(self.locale_time.f_month[1:], 'B'),
-            'b': self.__seqToRE(self.locale_time.a_month[1:], 'b'),
-            'p': self.__seqToRE(self.locale_time.am_pm, 'p'),
-            'Z': self.__seqToRE((tz for tz_names in self.locale_time.timezone
-                                        for tz in tz_names),
-                                'Z'),
-            '%': '%'})
-        base.__setitem__('W', base.__getitem__('U').replace('U', 'W'))
-        base.__setitem__('c', self.pattern(self.locale_time.LC_date_time))
-        base.__setitem__('x', self.pattern(self.locale_time.LC_date))
-        base.__setitem__('X', self.pattern(self.locale_time.LC_time))
-
-    def __seqToRE(self, to_convert, directive):
-        """Convert a list to a regex string for matching a directive.
-
-        Want possible matching values to be from longest to shortest.  This
-        prevents the possibility of a match occurring for a value that also
-        a substring of a larger value that should have matched (e.g., 'abc'
-        matching when 'abcdef' should have been the match).
-
-        """
-        to_convert = sorted(to_convert, key=len, reverse=True)
-        for value in to_convert:
-            if value != '':
-                break
-        else:
-            return ''
-        regex = '|'.join(re_escape(stuff) for stuff in to_convert)
-        regex = '(?P<%s>%s' % (directive, regex)
-        return '%s)' % regex
-
-    def pattern(self, format):
-        """Return regex pattern for the format string.
-
-        Need to make sure that any characters that might be interpreted as
-        regex syntax are escaped.
-
-        """
-        processed_format = ''
-        # The sub() call escapes all characters that might be misconstrued
-        # as regex syntax.  Cannot use re.escape since we have to deal with
-        # format directives (%m, etc.).
-        regex_chars = re_compile(r"([\\.^$*+?\(\){}\[\]|])")
-        format = regex_chars.sub(r"\\\1", format)
-        whitespace_replacement = re_compile(r'\s+')
-        format = whitespace_replacement.sub(r'\\s+', format)
-        while '%' in format:
-            directive_index = format.index('%')+1
-            processed_format = "%s%s%s" % (processed_format,
-                                           format[:directive_index-1],
-                                           self[format[directive_index]])
-            format = format[directive_index+1:]
-        return "%s%s" % (processed_format, format)
-
-    def compile(self, format):
-        """Return a compiled re object for the format string."""
-        return re_compile(self.pattern(format), IGNORECASE)
-
-_TimeRE_cache = TimeRE()
-
-
-def _strptime(data_string, format="%a %b %d %H:%M:%S %Y"):
-    """Return a 2-tuple consisting of a time struct and an int containing
-    the number of microseconds based on the input string and the
-    format string."""
-
-    for index, arg in enumerate([data_string, format]):
-        if not isinstance(arg, str):
-            msg = "strptime() argument {} must be str, not {}"
-            raise TypeError(msg.format(index, type(arg)))
-
-    global _TimeRE_cache, _regex_cache
-    with _cache_lock:
-        locale_time = _TimeRE_cache.locale_time
-        if (_getlang() != locale_time.lang or
-                time.tzname != locale_time.tzname or
-                time.daylight != locale_time.daylight):
-            _TimeRE_cache = TimeRE()
-            _regex_cache.clear()
-            locale_time = _TimeRE_cache.locale_time
-        if len(_regex_cache) > _CACHE_MAX_SIZE:
-            _regex_cache.clear()
-        format_regex = _regex_cache.get(format)
-        if not format_regex:
-            try:
-                format_regex = _TimeRE_cache.compile(format)
-            # KeyError raised when a bad format is found; can be specified as
-            # \\, in which case it was a stray % but with a space after it
-            except KeyError as err:
-                bad_directive = err.args[0]
-                if bad_directive == "\\":
-                    bad_directive = "%"
-                del err
-                raise ValueError("'%s' is a bad directive in format '%s'" %
-                                 (bad_directive, format)) from None
-            # IndexError only occurs when the format string is "%"
-            except IndexError:
-                raise ValueError("stray %% in format '%s'" % format) from None
-            _regex_cache[format] = format_regex
-    found = format_regex.match(data_string)
-    if not found:
-        raise ValueError("time data %r does not match format %r" %
-                         (data_string, format))
-    if len(data_string) != found.end():
-        raise ValueError("unconverted data remains: %s" %
-                         data_string[found.end():])
-
-    iso_year = year = None
-    month = day = 1
-    hour = minute = second = fraction = 0
-    tz = -1
-    gmtoff = None
-    gmtoff_fraction = 0
-    # Default to -1 to signify that values not known; not critical to have,
-    # though
-    iso_week = week_of_year = None
-    week_of_year_start = None
-    # weekday and julian defaulted to None so as to signal need to calculate
-    # values
-    weekday = julian = None
-    found_dict = found.groupdict()
-    for group_key in found_dict.keys():
-        # Directives not explicitly handled below:
-        #   c, x, X
-        #      handled by making out of other directives
-        #   U, W
-        #      worthless without day of the week
-        if group_key == 'y':
-            year = int(found_dict['y'])
-            # Open Group specification for strptime() states that a %y
-            # value in the range of [00, 68] is in the century 2000, while
-            # [69,99] is in the century 1900
-            if year <= 68:
-                year += 2000
-            else:
-                year += 1900
-        elif group_key == 'Y':
-            year = int(found_dict['Y'])
-        elif group_key == 'G':
-            iso_year = int(found_dict['G'])
-        elif group_key == 'm':
-            month = int(found_dict['m'])
-        elif group_key == 'B':
-            month = locale_time.f_month.index(found_dict['B'].lower())
-        elif group_key == 'b':
-            month = locale_time.a_month.index(found_dict['b'].lower())
-        elif group_key == 'd':
-            day = int(found_dict['d'])
-        elif group_key == 'H':
-            hour = int(found_dict['H'])
-        elif group_key == 'I':
-            hour = int(found_dict['I'])
-            ampm = found_dict.get('p', '').lower()
-            # If there was no AM/PM indicator, we'll treat this like AM
-            if ampm in ('', locale_time.am_pm[0]):
-                # We're in AM so the hour is correct unless we're
-                # looking at 12 midnight.
-                # 12 midnight == 12 AM == hour 0
-                if hour == 12:
-                    hour = 0
-            elif ampm == locale_time.am_pm[1]:
-                # We're in PM so we need to add 12 to the hour unless
-                # we're looking at 12 noon.
-                # 12 noon == 12 PM == hour 12
-                if hour != 12:
-                    hour += 12
-        elif group_key == 'M':
-            minute = int(found_dict['M'])
-        elif group_key == 'S':
-            second = int(found_dict['S'])
-        elif group_key == 'f':
-            s = found_dict['f']
-            # Pad to always return microseconds.
-            s += "0" * (6 - len(s))
-            fraction = int(s)
-        elif group_key == 'A':
-            weekday = locale_time.f_weekday.index(found_dict['A'].lower())
-        elif group_key == 'a':
-            weekday = locale_time.a_weekday.index(found_dict['a'].lower())
-        elif group_key == 'w':
-            weekday = int(found_dict['w'])
-            if weekday == 0:
-                weekday = 6
-            else:
-                weekday -= 1
-        elif group_key == 'u':
-            weekday = int(found_dict['u'])
-            weekday -= 1
-        elif group_key == 'j':
-            julian = int(found_dict['j'])
-        elif group_key in ('U', 'W'):
-            week_of_year = int(found_dict[group_key])
-            if group_key == 'U':
-                # U starts week on Sunday.
-                week_of_year_start = 6
-            else:
-                # W starts week on Monday.
-                week_of_year_start = 0
-        elif group_key == 'V':
-            iso_week = int(found_dict['V'])
-        elif group_key == 'z':
-            z = found_dict['z']
-            if z == 'Z':
-                gmtoff = 0
-            else:
-                if z[3] == ':':
-                    z = z[:3] + z[4:]
-                    if len(z) > 5:
-                        if z[5] != ':':
-                            msg = f"Inconsistent use of : in {found_dict['z']}"
-                            raise ValueError(msg)
-                        z = z[:5] + z[6:]
-                hours = int(z[1:3])
-                minutes = int(z[3:5])
-                seconds = int(z[5:7] or 0)
-                gmtoff = (hours * 60 * 60) + (minutes * 60) + seconds
-                gmtoff_remainder = z[8:]
-                # Pad to always return microseconds.
-                gmtoff_remainder_padding = "0" * (6 - len(gmtoff_remainder))
-                gmtoff_fraction = int(gmtoff_remainder + gmtoff_remainder_padding)
-                if z.startswith("-"):
-                    gmtoff = -gmtoff
-                    gmtoff_fraction = -gmtoff_fraction
-        elif group_key == 'Z':
-            # Since -1 is default value only need to worry about setting tz if
-            # it can be something other than -1.
-            found_zone = found_dict['Z'].lower()
-            for value, tz_values in enumerate(locale_time.timezone):
-                if found_zone in tz_values:
-                    # Deal with bad locale setup where timezone names are the
-                    # same and yet time.daylight is true; too ambiguous to
-                    # be able to tell what timezone has daylight savings
-                    if (time.tzname[0] == time.tzname[1] and
-                            time.daylight and found_zone not in ("utc", "gmt")):
-                        break
-                    else:
-                        tz = value
-                        break
-    # Deal with the cases where ambiguities arize
-    # don't assume default values for ISO week/year
-    if year is None and iso_year is not None:
-        if iso_week is None or weekday is None:
-            raise ValueError("ISO year directive '%G' must be used with "
-                             "the ISO week directive '%V' and a weekday "
-                             "directive ('%A', '%a', '%w', or '%u').")
-        if julian is not None:
-            raise ValueError("Day of the year directive '%j' is not "
-                             "compatible with ISO year directive '%G'. "
-                             "Use '%Y' instead.")
-    elif week_of_year is None and iso_week is not None:
-        if weekday is None:
-            raise ValueError("ISO week directive '%V' must be used with "
-                             "the ISO year directive '%G' and a weekday "
-                             "directive ('%A', '%a', '%w', or '%u').")
-        else:
-            raise ValueError("ISO week directive '%V' is incompatible with "
-                             "the year directive '%Y'. Use the ISO year '%G' "
-                             "instead.")
-
-    leap_year_fix = False
-    if year is None and month == 2 and day == 29:
-        year = 1904  # 1904 is first leap year of 20th century
-        leap_year_fix = True
-    elif year is None:
-        year = 1900
-
-    # If we know the week of the year and what day of that week, we can figure
-    # out the Julian day of the year.
-    if julian is None and weekday is not None:
-        if week_of_year is not None:
-            week_starts_Mon = True if week_of_year_start == 0 else False
-            julian = _calc_julian_from_U_or_W(year, week_of_year, weekday,
-                                              week_starts_Mon)
-        elif iso_year is not None and iso_week is not None:
-            year, julian = _calc_julian_from_V(iso_year, iso_week, weekday + 1)
-        if julian is not None and julian <= 0:
-            year -= 1
-            yday = 366 if calendar.isleap(year) else 365
-            julian += yday
-    return (year, month, day,
-            hour, minute, second,
-            weekday, julian, tz, gmtoff), fraction, gmtoff_fraction
+from .parser import _strptime
 
 
 class EraDate(datetime.date):
@@ -366,15 +43,15 @@ class EraDate(datetime.date):
             year = self.year - self.era.start.year + 1
             rep = {"%-E": self.era.kanji, "%-e": self.era.english_shorten_vowel, "%-A": self.era.english,
                    "%-a": self.era.english[0], "%-o": str(year % 100).zfill(2),
-                   "%-O": "元" if year == 1 else str(year % 100).zfill(2), "%-ko": int2kanji(year % 100),
-                   "%-kO": "元" if year == 1 else int2kanji(year % 100), "%-km": int2kanji(self.month),
-                   "%-kd": int2kanji(self.day)}
+                   "%-O": "元" if year == 1 else str(year % 100).zfill(2), "%-ko": number2kanji(year % 100),
+                   "%-kO": "元" if year == 1 else number2kanji(year % 100), "%-km": number2kanji(self.month),
+                   "%-kd": number2kanji(self.day)}
         except (AttributeError, TypeError):
             try:
                 rep = {"%-E": "不明", "%-e": "Unknown", "%-A": "Unknown", "%-a": "U", "%-o": str(year % 100).zfill(2),
-                       "%-O": "元" if year == 1 else str(year % 100).zfill(2), "%-ko": int2kanji(year % 100),
-                       "%-kO": "元" if year == 1 else int2kanji(year % 100), "%-km": int2kanji(self.month),
-                       "%-kd": int2kanji(self.day)}
+                       "%-O": "元" if year == 1 else str(year % 100).zfill(2), "%-ko": number2kanji(year % 100),
+                       "%-kO": "元" if year == 1 else number2kanji(year % 100), "%-km": number2kanji(self.month),
+                       "%-kd": number2kanji(self.day)}
             except (AttributeError, UnboundLocalError):
                 if not allow_before:
                     raise ValueError("Given date is too early to format")
@@ -437,15 +114,15 @@ class EraDateTime(datetime.datetime):
             year = self.year - self.era.start.year + 1
             rep = {"%-E": self.era.kanji, "%-e": self.era.english_shorten_vowel, "%-A": self.era.english,
                    "%-a": self.era.english[0], "%-o": str(year % 100).zfill(2),
-                   "%-O": "元" if year == 1 else str(year % 100).zfill(2), "%-ko": int2kanji(year % 100),
-                   "%-kO": "元" if year == 1 else int2kanji(year % 100), "%-km": int2kanji(self.month),
-                   "%-kd": int2kanji(self.day)}
+                   "%-O": "元" if year == 1 else str(year % 100).zfill(2), "%-ko": number2kanji(year % 100),
+                   "%-kO": "元" if year == 1 else number2kanji(year % 100), "%-km": number2kanji(self.month),
+                   "%-kd": number2kanji(self.day)}
         except (AttributeError, TypeError):
             try:
                 rep = {"%-E": "不明", "%-e": "Unknown", "%-A": "Unknown", "%-a": "U", "%-o": str(year % 100).zfill(2),
-                       "%-O": "元" if year == 1 else str(year % 100).zfill(2), "%-ko": int2kanji(year % 100),
-                       "%-kO": "元" if year == 1 else int2kanji(year % 100), "%-km": int2kanji(self.month),
-                       "%-kd": int2kanji(self.day)}
+                       "%-O": "元" if year == 1 else str(year % 100).zfill(2), "%-ko": number2kanji(year % 100),
+                       "%-kO": "元" if year == 1 else number2kanji(year % 100), "%-km": number2kanji(self.month),
+                       "%-kd": number2kanji(self.day)}
             except (AttributeError, UnboundLocalError):
                 if not allow_before:
                     raise ValueError("Given date is too early to format")
@@ -470,9 +147,9 @@ class EraDateTime(datetime.datetime):
                                  second=self.second, microsecond=self.microsecond, tzinfo=self.tzinfo, fold=self.fold)
 
     def __repr__(self):
-        return "Era.eradate({}, {}, {}, {}, {}, {}, {}, {})".format(self.era, self.year, self.month, self.day,
-                                                                    self.hour, self.minute, self.second,
-                                                                    self.microsecond)
+        return "{}({}, {}, {}, {}, {}, {}, {}, {})".format(self.__class__.__name__, self.era, self.year, self.month,
+                                                           self.day, self.hour, self.minute, self.second,
+                                                           self.microsecond)
 
     def __str__(self):
         return self.strftime("%-E-%Y-%m-%d %H:%M:%S")
@@ -481,12 +158,11 @@ class EraDateTime(datetime.datetime):
 class Era:
     def __init__(self, kanji, english, start, end, _type):
         """
-
-        :param kanji - str: kanji letter of era. exp. "大正"
-        :param english - str: english letter of pronunciation of era. exp. "Taishou"
-        :param start - datetime.date: start of the era. This day is included to this era.
-        :param end - datetime.date: end of the era. This day is excluded to this era.
-        :param _type - str: Type of This Era. "common", "daikakuji", "jimyouin"  or "christian"
+        :param kanji - `str`: kanji letter of era. exp. "大正"
+        :param english - `str`: english letter of pronunciation of era. exp. "Taishou"
+        :param start - `datetime.date`: start of the era. This day is included to this era.
+        :param end - `datetime.date`: end of the era. This day is excluded to this era.
+        :param _type - `str`: Type of This Era. "common", "daikakuji", "jimyouin"  or "christian"
         """
         self.kanji = kanji
         self.english = english
@@ -499,8 +175,6 @@ class Era:
         """
         Return self.english vowel shortened. exp. "Taishou" -> "Taisho"
         :return: str
-
-        Didn't use str.replace for scalability
         """
         try:
             english = self.english.lower()
@@ -522,24 +196,17 @@ class Era:
 
     def _in(self, dt):
         """
-        Return if given date is in between self.start and self.end
-        :param dt: datetime.date or datetime.datetime
+        Return if given date is in between `self.start` and `self.end`
+        :param dt: `datetime.date` or `datetime.datetime`
         :return: bool
         """
-        if isinstance(dt, datetime.datetime):
-            dt = dt.date()
-        if self.start and self.end:
-            return self.start <= dt < self.end
-        elif self.start:
-            return self.start <= dt
-        elif self.end:
-            return dt < self.end
-        return False
+        warnings.warn("This method is deprecated. Use `item in japanera.Era` instead", DeprecationWarning)
+        return dt in self
 
     def is_after(self, other):
         """
         Return if given object (datetime.date or japanera.Era) is placed after this era.
-        :param other - datetime.date or japanera.Era:
+        :param other: - datetime.date or japanera.Era
         :return: bool
         """
         return other < self
@@ -599,7 +266,7 @@ class Era:
             _str = _str.replace("元", "01")
 
         kanjis = re.compile("[一二三四五六七八九十百千万億兆京垓𥝱]+").findall(_str)
-        int_from_kanji = [*map(lambda x: str(kanji2int(x)).zfill(2), kanjis)]
+        int_from_kanji = [*map(lambda x: str(kanji2number(x)).zfill(2), kanjis)]
         for k, i in zip(kanjis, int_from_kanji):
             _str = _str.replace(k, str(i))
             fmt = fmt.replace(k, str(i))
@@ -620,6 +287,7 @@ class Era:
             return other.date() < self.start
         elif isinstance(other, datetime.date):
             return other < self.start
+        raise TypeError("Can't compare Era and {}".format(type(other)))
 
     def __lt__(self, other):
         if not self.end:
@@ -630,6 +298,7 @@ class Era:
             return self.end < other.date()
         elif isinstance(other, datetime.date):
             return self.end < other
+        raise TypeError("Can't compare Era and {}".format(type(other)))
 
     def __eq__(self, other):
         try:
@@ -640,10 +309,27 @@ class Era:
         except AttributeError:
             return False
 
+    def __contains__(self, item: Union[datetime.date, datetime.datetime]) -> bool:
+        """
+        Return if given date is in between `self.start` and `self.end`
+        :param item: `datetime.date` or `datetime.datetime`
+        :return: bool
+        """
+        if isinstance(item, datetime.datetime):
+            item = item.date()
+        if self.start and self.end:
+            return self.start <= item < self.end
+        elif self.start:
+            return self.start <= item
+        elif self.end:
+            return item < self.end
+        return False
+
     def __repr__(self):
-        start_time = self.start.strftime("%d/%m/%Y") if self.start else "None"
-        end_time = self.end.strftime("%d/%m/%Y") if self.end else "None"
-        return "<Era {}:{} {} - {}>".format(self.kanji, self.english, start_time, end_time)
+        start_time = self.start.strftime("%d/%m/%Y") if self.start else None
+        end_time = self.end.strftime("%d/%m/%Y") if self.end else None
+        return "{}({!r}, {!r}, {!r}, {!r})".format(self.__class__.__name__, self.kanji, self.english, start_time,
+                                                   end_time)
 
     def __str__(self):
         return "{}: {}".format(self.kanji, self.english)
@@ -929,7 +615,7 @@ class Japanera:
                 if use_chris:
                     return self.christ_ad
                 return None
-            if self.era_common_daikakuji[ind - 1]._in(dt):
+            if dt in self.era_common_daikakuji[ind - 1]:
                 return self.era_common_daikakuji[ind - 1]
             if use_chris:
                 return self.christ_ad
@@ -940,18 +626,18 @@ class Japanera:
                 if use_chris:
                     return self.christ_ad
                 return None
-            if self.era_common_jimyouin[ind - 1]._in(dt):
+            if dt in self.era_common_jimyouin[ind - 1]:
                 return self.era_common_jimyouin[ind - 1]
             if use_chris:
                 return self.christ_ad
             return None
 
-    def era_match(self, value, key=lambda x: x, cmp=lambda x, y: x._in(y), error="warn"):
+    def era_match(self, value, key=lambda x: x, cmp=lambda x, y: y in x, error="warn"):
         """
         Return all Era objects stored in self.era_common or self.era_daikakuji or self.era_jimyouin which
         cmp(key(Era), value) is True.
         if key is not provided, key is lambda x: x
-        if cmp is not provided, cmp is lambda x, y: x._in(y)
+        if cmp is not provided, cmp is lambda x, y: y in x
 
         error sets error level
             "ignore": ignore all errors occurred while running compare
@@ -1042,7 +728,7 @@ class Japanera:
                        "%-ko": "%y", "%-kO": "%y", "%-km": "%m", "%-kd": "%d"}
 
             kanjis = re.compile("[一二三四五六七八九十百千万億兆京垓𥝱]+").findall(__str)
-            int_from_kanji = [*map(lambda x: str(kanji2int(x)).zfill(2), kanjis)]
+            int_from_kanji = [*map(lambda x: str(kanji2number(x)).zfill(2), kanjis)]
 
             if "%-O" in fmt or "%-kO" in fmt:
                 _fmt = _fmt.replace("元", "01")
@@ -1074,7 +760,7 @@ class Japanera:
             if use_chris:
                 return self.christ_ad
             return None
-        if self.era_common_daikakuji[ind - 1]._in(dt):
+        if dt in self.era_common_daikakuji[ind - 1]:
             return self.era_common_daikakuji[ind - 1]
         if use_chris:
             return self.christ_ad
@@ -1086,7 +772,7 @@ class Japanera:
             if use_chris:
                 return self.christ_ad
             return None
-        if self.era_common_jimyouin[ind - 1]._in(dt):
+        if dt in self.era_common_jimyouin[ind - 1]:
             return self.era_common_jimyouin[ind - 1]
         if use_chris:
             return self.christ_ad

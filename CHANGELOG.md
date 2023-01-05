@@ -1,3 +1,7 @@
+# 1.1.0
+- Support kanjize 1.3.0
+- Support `dt in Era` Syntax
+
 # 1.0.1
 - Now this can parse single digit year.
 

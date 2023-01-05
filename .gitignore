@@ -1,3 +1,7 @@
 .idea
 .pypirc
 japanera/__pycache__
+.pytest_cache
+build
+dist
+Japanera.egg-info

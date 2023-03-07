@@ -17,13 +17,10 @@ is [Wikipedia Page](https://ja.wikipedia.org/wiki/%E5%85%83%E5%8F%B7%E4%B8%80%E8
 True
 
 >>> "Current Japanese Era is <{}>: <{}>".format(today.era.kanji, today.era.english)
-Current
-Japanese
-Era is <令和>: <Reiwa>
+Current Japanese Era is <令和>: <Reiwa>
 
 >>> "Current Date is <{}>".format(today.strftime("%-K%-y年%m月%d日"))
-Current
-Date is <令和05年03月07日>
+Current Date is <令和05年03月07日>
 ```
 
 # Installation

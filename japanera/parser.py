@@ -1,10 +1,40 @@
 import calendar
+import datetime
 import time
-from _strptime import (_calc_julian_from_U_or_W, _calc_julian_from_V, _cache_lock, _getlang, TimeRE, _CACHE_MAX_SIZE, _TimeRE_cache,
-                       _regex_cache, _strptime_datetime, LocaleTime, re_escape, re_compile, IGNORECASE)
+from _strptime import (_calc_julian_from_U_or_W, _calc_julian_from_V, _cache_lock, _getlang, _CACHE_MAX_SIZE,
+                       _regex_cache, LocaleTime, re_escape, re_compile, IGNORECASE)
+from calendar import monthrange
+from collections import defaultdict
+from typing import Optional, List, Tuple
+
+from kanjize import kanji2number
+
+_ERA_DATA_COMMON, _ERA_DATA_GENERAL, _ERA_DATA_DAIKAKUJI, _ERA_DATA_JIMYOUIN = [], [], [], []
+
+_era_kanji_dict = defaultdict(set)
+_era_alphabet_dict = defaultdict(set)
+_era_alphabet_vowel_shortened_dict = defaultdict(set)
+_era_alphabet_head_dict = defaultdict(set)
+
+_JAPANERA_TimeRE_cache = None
 
 
-_TimeRE_cache = TimeRE()
+def _set_era_data(era_data_common, era_data_general, era_data_daikakuji, era_data_jimyouin):
+    global _ERA_DATA_COMMON, _ERA_DATA_GENERAL, _ERA_DATA_DAIKAKUJI, _ERA_DATA_JIMYOUIN
+    _ERA_DATA_COMMON = era_data_common
+    _ERA_DATA_GENERAL = era_data_general
+    _ERA_DATA_DAIKAKUJI = era_data_daikakuji
+    _ERA_DATA_JIMYOUIN = era_data_jimyouin
+
+    for _era in _ERA_DATA_COMMON + _ERA_DATA_GENERAL + _ERA_DATA_DAIKAKUJI + _ERA_DATA_JIMYOUIN:
+        _era_kanji_dict[_era.kanji].add(_era)
+        _era_alphabet_dict[_era.english].add(_era)
+        _era_alphabet_vowel_shortened_dict[_era.english_vowel_shortened].add(_era)
+        _era_alphabet_head_dict[_era.english_head].add(_era)
+
+    global _JAPANERA_TimeRE_cache
+    _JAPANERA_TimeRE_cache = TimeRE()
+
 
 class TimeRE(dict):
     """Handle conversion from format directives to regexes."""
@@ -20,7 +50,31 @@ class TimeRE(dict):
         else:
             self.locale_time = LocaleTime()
         base = super()
+
         base.__init__({
+            # Added for Japanera
+            '-K': self.__seqToRE(_era_kanji_dict.keys(), '_K'),
+            '-E': self.__seqToRE(_era_alphabet_dict.keys(), '_E'),
+            '-e': self.__seqToRE(_era_alphabet_vowel_shortened_dict.keys(), '_e'),
+            '-h': self.__seqToRE(_era_alphabet_head_dict.keys(), '_h'),
+            '-n': r"(?P<_n>[一二三四五六七八九]?十[一二三四五六七八九]?|"
+                  r"[一二三四五六七八九]|"
+                  r"元)",
+            '-N': r"(?P<_N>"
+                  r"[一二三四五六七八九]?千([一二三四五六七八九]?百)?([一二三四五六七八九]?十)?[一二三四五六七八九]?|"
+                  r"[一二三四五六七八九]?百([一二三四五六七八九]?十)?[一二三四五六七八九]?|"
+                  r"[一二三四五六七八九]?十[一二三四五六七八九]?|"
+                  r"[一二三四五六七八九]|"
+                  r"元)",
+            '-y': r"(?P<_y>\d\d|\d|"
+                  r"元)",
+            '-Y': r"(?P<_Y>\d{1,4}|"
+                  r"元)",
+            '-m': r"(?P<_m>1[0-2]|0[1-9]|[1-9]|十[一二]?|[一二三四五六七八九])",
+            '-d': r"(?P<_d>3[0-1]|[1-2]\d|0[1-9]|[1-9]| [1-9]|三十一?|二?十[一二三四五六七八九]?|[一二三四五六七八九])",
+            '-a': r"(?P<_a>[月火水木金土日])",
+
+            # Default below
             # The " [1-9]" part of the regex is to make %c from ANSI C work
             'd': r"(?P<d>3[0-1]|[1-2]\d|0[1-9]|[1-9]| [1-9])",
             'f': r"(?P<f>[0-9]{1,6})",
@@ -91,16 +145,19 @@ class TimeRE(dict):
         format = whitespace_replacement.sub(r'\\s+', format)
         while '%' in format:
             directive_index = format.index('%') + 1
+            if format[directive_index] == '-':
+                directive = format[directive_index:directive_index + 2]
+            else:
+                directive = format[directive_index]
             processed_format = "%s%s%s" % (processed_format,
                                            format[:directive_index - 1],
-                                           self[format[directive_index]])
-            format = format[directive_index + 1:]
+                                           self[directive])
+            format = format[directive_index + len(directive):]
         return "%s%s" % (processed_format, format)
 
     def compile(self, format):
         """Return a compiled re object for the format string."""
         return re_compile(self.pattern(format), IGNORECASE)
-
 
 
 def _strptime(data_string, format="%a %b %d %H:%M:%S %Y"):
@@ -114,20 +171,20 @@ def _strptime(data_string, format="%a %b %d %H:%M:%S %Y"):
             raise TypeError(msg.format(index, type(arg)))
 
     with _cache_lock:
-        global _TimeRE_cache
-        locale_time = _TimeRE_cache.locale_time
+        global _JAPANERA_TimeRE_cache
+        locale_time = _JAPANERA_TimeRE_cache.locale_time
         if (_getlang() != locale_time.lang or
                 time.tzname != locale_time.tzname or
                 time.daylight != locale_time.daylight):
-            _TimeRE_cache = TimeRE()
+            _JAPANERA_TimeRE_cache = TimeRE()
             _regex_cache.clear()
-            locale_time = _TimeRE_cache.locale_time
+            locale_time = _JAPANERA_TimeRE_cache.locale_time
         if len(_regex_cache) > _CACHE_MAX_SIZE:
             _regex_cache.clear()
         format_regex = _regex_cache.get(format)
         if not format_regex:
             try:
-                format_regex = _TimeRE_cache.compile(format)
+                format_regex = _JAPANERA_TimeRE_cache.compile(format)
             # KeyError raised when a bad format is found; can be specified as
             # \\, in which case it was a stray % but with a space after it
             except KeyError as err:
@@ -150,7 +207,7 @@ def _strptime(data_string, format="%a %b %d %H:%M:%S %Y"):
                          data_string[found.end():])
 
     iso_year = year = None
-    month = day = 1
+    month = day = None
     hour = minute = second = fraction = 0
     tz = -1
     gmtoff = None
@@ -163,13 +220,62 @@ def _strptime(data_string, format="%a %b %d %H:%M:%S %Y"):
     # values
     weekday = julian = None
     found_dict = found.groupdict()
+
+    era_kanji = era_english = era_english_vowel_shortened = era_head = None
+    relative_year = None
+
     for group_key in found_dict.keys():
         # Directives not explicitly handled below:
         #   c, x, X
         #      handled by making out of other directives
         #   U, W
         #      worthless without day of the week
-        if group_key == 'y':
+        #  ===== ADDED BY JAPANERA BELOW =====
+        if group_key == '_K':
+            era_kanji = found_dict['_K']
+        elif group_key == '_E':
+            era_english = found_dict['_E']
+        elif group_key == '_e':
+            era_english_vowel_shortened = found_dict['_e']
+        elif group_key == '_h':
+            era_head = found_dict['_h']
+        elif group_key == '_n':
+            found_relative_year = found_dict['_n']
+
+            if found_relative_year == '元':
+                relative_year = 1
+            else:
+                relative_year = kanji2number(found_relative_year)
+        elif group_key == '_N':
+            found_absolute_year = found_dict['_N']
+
+            if found_absolute_year == '元':
+                year = 1
+            else:
+                year = kanji2number(found_absolute_year)
+        elif group_key == '_y':
+            found_relative_year = found_dict['_y']
+
+            if found_relative_year == '元':
+                relative_year = 1
+            else:
+                relative_year = int(found_relative_year)
+        elif group_key == '_Y':
+            found_absolute_year = found_dict['_Y']
+
+            if found_absolute_year == '元':
+                year = 1
+            else:
+                year = kanji2number(found_absolute_year)
+        elif group_key == '_m':
+            month = kanji2number(found_dict['_m'])
+        elif group_key == '_d':
+            day = kanji2number(found_dict['_d'])
+        elif group_key == '_a':
+            weekday = '月火水木金土日'.index(found_dict['_a'])
+        #  ===== ADDED BY JAPANERA ABOVE =====
+
+        elif group_key == 'y':
             year = int(found_dict['y'])
             # Open Group specification for strptime() states that a %y
             # value in the range of [00, 68] is in the century 2000, while
@@ -300,13 +406,7 @@ def _strptime(data_string, format="%a %b %d %H:%M:%S %Y"):
             raise ValueError("ISO week directive '%V' is incompatible with "
                              "the year directive '%Y'. Use the ISO year '%G' "
                              "instead.")
-
-    leap_year_fix = False
-    if year is None and month == 2 and day == 29:
-        year = 1904  # 1904 is first leap year of 20th century
-        leap_year_fix = True
-    elif year is None:
-        year = 1900
+    tzname = found_dict.get("Z")
 
     # If we know the week of the year and what day of that week, we can figure
     # out the Julian day of the year.
@@ -321,6 +421,148 @@ def _strptime(data_string, format="%a %b %d %H:%M:%S %Y"):
             year -= 1
             yday = 366 if calendar.isleap(year) else 365
             julian += yday
-    return (year, month, day,
+    return (era_kanji, era_english, era_english_vowel_shortened,
+            era_head, relative_year), \
+           (year, month, day,
             hour, minute, second,
-            weekday, julian, tz, gmtoff), fraction, gmtoff_fraction
+            weekday, julian, tz, tzname,
+            gmtoff), fraction, gmtoff_fraction
+
+
+def find_era_and_date(era_kanji: Optional[str] = None,
+                      era_english: Optional[str] = None,
+                      era_english_vowel_shortened: Optional[str] = None,
+                      era_head_english: Optional[str] = None,
+                      absolute_year: Optional[int] = None,
+                      relative_year: Optional[int] = None,
+                      month: Optional[int] = None,
+                      day: Optional[int] = None,
+                      allow_date_after_end_of_era: bool = False,
+                      ) -> List[Tuple["Era", datetime.date]]:
+    """
+    Find era and date from given information.
+    Args:
+        era_kanji: Kanji of era name
+        era_english: English of era name
+        era_english_vowel_shortened: English of era name with vowel shortened
+        era_head_english: English of era name with only first letter
+        absolute_year: Absolute year
+        relative_year: Relative year from era
+        month: Month
+        day: Day
+        allow_date_after_end_of_era: If True, allow date after end of era
+
+    Returns: List of era and date
+
+    """
+    era_set = None
+
+    for text, _dict in zip((era_kanji, era_english, era_english_vowel_shortened, era_head_english),
+                           (_era_kanji_dict, _era_alphabet_dict, _era_alphabet_vowel_shortened_dict,
+                            _era_alphabet_head_dict)):
+        if text:
+            _found = _dict[text]
+            era_set = era_set & _found if era_set else _found
+    if absolute_year is not None:
+        _found = find_eras_with_year(absolute_year)
+        era_set = era_set & _found if era_set else _found
+    if (era_kanji or era_english or era_english_vowel_shortened or
+        era_head_english or absolute_year is not None) and not era_set:
+        raise ValueError("Era_ information given but no match era found.")
+
+    era_set = era_set or _ERA_DATA_GENERAL + _ERA_DATA_COMMON + _ERA_DATA_DAIKAKUJI + _ERA_DATA_JIMYOUIN
+    era_list = sorted(era_set, key=lambda x: (x.since, x.era_type.value))
+
+    result = []
+    for era in era_list:
+        dt = era.since
+        if absolute_year is not None and absolute_year != dt.year:
+            # if absolute_year is different from era's since year, we can make result new years day
+            dt = datetime.date(absolute_year, 1, 1)
+        elif relative_year is not None and relative_year > 1:
+            # relative_year starts from 1, so we need to add 1 to relative_year
+            dt = datetime.date(dt.year + relative_year - 1, 1, 1)
+        if month is not None:
+            if dt.year != era.since.year or month != dt.month:
+                # if month is specified to be different from `since` month, 1st of the month is most early date
+                dt = dt.replace(month=month, day=1)
+                if absolute_year is None and relative_year is None and dt < era.since:
+                    dt = dt.replace(year=dt.year + 1)
+            if day is not None:  # if month is specified, we can't use loop below to find the month
+                if month == 2 and day == 29:
+                    if absolute_year is None and relative_year is None:
+                        # if month is February and day is 29 and no year is specified, we need to find next leap year
+                        dt = dt.replace(year=find_closest_leap_year(dt.year))
+                try:
+                    dt = dt.replace(day=day)
+                except ValueError:  # out of range
+                    continue
+        elif day is not None:
+            while True:  # we know `day` is not more than 31 because of legit regex
+                try:
+                    dt = dt.replace(day=day)
+                    break
+                except ValueError:  # out of range
+                    days_in_month = monthrange(dt.year, dt.month)[1]
+                    dt += datetime.timedelta(days=days_in_month)
+
+        if allow_date_after_end_of_era:
+            if dt < era.since:
+                continue
+        elif dt not in era:
+            continue
+        result.append((era, dt))
+    return result
+
+
+def find_closest_leap_year(year: int) -> int:
+    """
+    Find the closest leap year from `year`. If `year` is leap year, return `year`.
+    Args:
+        year: year to find
+
+    Returns: closest leap year from `year`
+
+    """
+    if not year % 100 and year % 400:
+        return year + 4
+    if not year % 4:
+        return year
+    if (year % 100 > 96) and (year % 400 <= 396):
+        return year + (8 - year % 4)
+    return year + (4 - year % 4)
+
+
+def find_eras_with_year(year: int) -> set["Era"]:
+    """
+    Find all eras that contains `year`.
+    Args:
+        year: year to find
+
+    Returns: set of Era that contains `year`
+    """
+
+    def _find_first_era_after_year_index(era_list: list["Era"]) -> int:
+        # return the index of first era that starts after `year`
+        ok = len(era_list)
+        ng = -1
+        while abs(ok - ng) > 1:
+            mid = (ok + ng) // 2
+            if era_list[mid].since.year <= year:
+                ng = mid
+            else:
+                ok = mid
+        return ok
+
+    result = set(_ERA_DATA_COMMON)
+    for era_list in (_ERA_DATA_GENERAL, _ERA_DATA_DAIKAKUJI, _ERA_DATA_JIMYOUIN):
+        for i in range(_find_first_era_after_year_index(era_list) - 1, -1, -1):
+            era = era_list[i]
+            # we know that this era must be started before or exact `year`
+            # so we can check the `era.until.year` to see if it contains
+            # `year`. and notice that current `era`'s until can be None
+            if era.until and year > era.until.year:
+                break
+            result.add(era)
+
+    return result

@@ -9,22 +9,17 @@ Powered by [Yamato Nagata](https://twitter.com/514YJ)
 
 ```python
 >>> from datetime import date
->>> from japanera import Japanera, EraDate
+>>> from japanera import EraDate
 
->>> janera = Japanera()
-
->>> c_era = janera.era(date.today())
->>> c_era._in(date(2019, 4, 16))
+>>> today = EraDate.from_date(date.today())
+>>> date(2020, 4, 16) in today.era
 True
 
->>> "Current Japanese Era is <{}>: <{}>".format(c_era.kanji, c_era.english)
-Current Japanese Era is <平成>: <Heisei>
+>>> "Current Japanese Era is <{}>: <{}>".format(today.era.kanji, today.era.english)
+Current Japanese Era is <令和>: <Reiwa>
 
->>> "Current Date is <{}>".format(c_era.strftime(date(2019, 4, 16), "%-E%-O年%m月%d日"))
-Current Date is <平成31年04月16日>
-
->>> # Or you can do same thing in this way
->>> "Current Date is <{}>".format(EraDate(2019, 4, 16).strftime("%-E%-O年%m月%d日"))
+>>> "Current Date is <{}>".format(today.strftime("%-K%-y年%m月%d日"))
+Current Date is <令和05年03月07日>
 ```
 """
 

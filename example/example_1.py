@@ -1,8 +1,6 @@
 import datetime
 
-from japanera import Japanera
-
-japera = Japanera()
+from japanera import EraDate
 
 """
 [out] Input the date you want to know how to say in Japanese!
@@ -35,6 +33,6 @@ while True:
         print("Input correctly!!")
         continue
     try:
-        print("-" * 5, japera.strftime(_date, "%-E%-O年%m月%d日"), "-" * 5)
+        print("-" * 5, EraDate.from_date(_date).strftime("%-K%-Y年%m月%d日"), "-" * 5)
     except AttributeError:
         print("We don't have japanese era for given date...")

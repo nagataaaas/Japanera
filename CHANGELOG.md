@@ -1,3 +1,8 @@
+# 2.0.0
+- Destructive change: Many methods are renamed, new written, and deleted.
+- Core `strptime` and `strftime` are rewritten.
+- Removed `japanera.Japanera` class. Upgrade carefully.
+
 # 1.1.0
 - Support kanjize 1.3.0
 - Support `dt in Era` Syntax
@@ -18,10 +23,10 @@
 - Bug fix
 
 # v0.0.5
-- Fixed The bug `strptime` don't return collect result when "%-kO" in `fmt`
+- Fixed The bug `strptime` don't return collect result when "%-kY" in `fmt`
 
 # v0.0.4
-- Added `%-kO`, `%-ko`, `%-km` and `%-kd` directive to every `strftime` and `strptime`. It's so useful to use Kainji-Number.
+- Added `%-kY`, `%-ky`, `%-km` and `%-kd` directive to every `strftime` and `strptime`. It's so useful to use Kainji-Number.
 
 # v0.0.3
 - Fixed `ModuleNotFoundError: No module named 'japanera.0'` error when `from japanera import *`

@@ -1,4 +1,4 @@
-VERSION = 1.1.0
+VERSION = 2.0.0
 
 .PHONY: all clean test build
 
@@ -16,7 +16,7 @@ install:
 	pip install -e . --force-reinstall
 
 test:
-	python tests/test.py
+	python -m unittest discover -s tests
 
 clean:
 	rm -rf *.egg-info .pytest_cache build

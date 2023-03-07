@@ -1,10 +1,10 @@
 __title__ = "Japanera"
 __description__ = "Easy japanese era tool"
 __url__ = "https://github.com/nagataaaas/Japanera"
-__version_info__ = ("1", "1", "0")
+__version_info__ = ("2", "0", "0")
 __version__ = ".".join(__version_info__)
 __author__ = "Yamato Nagata"
 __author_email__ = "nagata@mail.nagata.pro"
 __maintainer__ = "Yamato Nagata"
 __license__ = "MIT"
-__copyright__ = "(c) 2019-2022 by Yamato Nagata"
+__copyright__ = "(c) 2019-2023 by Yamato Nagata"

@@ -1,7 +1,7 @@
 import calendar
 import datetime
 import time
-from _strptime import (_calc_julian_from_U_or_W, _calc_julian_from_V, _cache_lock, _getlang, _CACHE_MAX_SIZE,
+from _strptime import (_calc_julian_from_U_or_W, _cache_lock, _getlang, _CACHE_MAX_SIZE,
                        _regex_cache, LocaleTime, re_escape, re_compile, IGNORECASE)
 from calendar import monthrange
 from collections import defaultdict
@@ -158,6 +158,22 @@ class TimeRE(dict):
     def compile(self, format):
         """Return a compiled re object for the format string."""
         return re_compile(self.pattern(format), IGNORECASE)
+
+
+def _calc_julian_from_V(iso_year, iso_week, iso_weekday):
+    """Calculate the Julian day based on the ISO 8601 year, week, and weekday.
+    ISO weeks start on Mondays, with week 01 being the week containing 4 Jan.
+    ISO week days range from 1 (Monday) to 7 (Sunday).
+    """
+    correction = datetime_date(iso_year, 1, 4).isoweekday() + 3
+    ordinal = (iso_week * 7) + iso_weekday - correction
+    # ordinal may be negative or 0 now, which means the date is in the previous
+    # calendar year
+    if ordinal < 1:
+        ordinal += datetime_date(iso_year, 1, 1).toordinal()
+        iso_year -= 1
+        ordinal -= datetime_date(iso_year, 1, 1).toordinal()
+    return iso_year, ordinal
 
 
 def _strptime(data_string, format="%a %b %d %H:%M:%S %Y"):

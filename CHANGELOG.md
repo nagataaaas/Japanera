@@ -1,5 +1,6 @@
 # 2.1.0
-- support Python3.12
+- support Python3.12. (contributed by mytabata)
+- fix type annotation. (pointed out by tnagano22)
 
 # 2.0.0
 - Destructive change: Many methods are renamed, new written, and deleted.

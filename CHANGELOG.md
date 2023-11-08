@@ -1,3 +1,6 @@
+# 2.1.0
+- support Python3.12
+
 # 2.0.0
 - Destructive change: Many methods are renamed, new written, and deleted.
 - Core `strptime` and `strftime` are rewritten.

@@ -23,8 +23,9 @@ Current Date is <令和05年03月07日>
 ```
 """
 
-from setuptools import setup
 from os import path
+
+from setuptools import setup
 
 about = {}
 with open("japanera/__about__.py") as f:
@@ -41,7 +42,7 @@ setup(name=about["__title__"],
       description=about["__description__"],
       long_description=__doc__,
       long_description_content_type="text/markdown",
-      install_requires=["kanjize==1.3.0"],
+      install_requires=["kanjize==1.4.0"],
       packages=["japanera"],
       zip_safe=False,
       platforms="any",

@@ -1,1 +1,1 @@
-kanjize==1.3.0
+kanjize==1.4.0

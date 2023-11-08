@@ -1,12 +1,13 @@
 import calendar
 import datetime
 import time
-from _strptime import (_calc_julian_from_U_or_W, _cache_lock, _getlang, _CACHE_MAX_SIZE,
-                       _regex_cache, LocaleTime, re_escape, re_compile, IGNORECASE)
 from calendar import monthrange
 from collections import defaultdict
-from typing import Optional, List, Tuple
+from typing import List, Optional, Set, Tuple
 
+from _strptime import (_CACHE_MAX_SIZE, IGNORECASE, LocaleTime, _cache_lock,
+                       _calc_julian_from_U_or_W, _getlang, _regex_cache,
+                       re_compile, re_escape)
 from kanjize import kanji2number
 
 _ERA_DATA_COMMON, _ERA_DATA_GENERAL, _ERA_DATA_DAIKAKUJI, _ERA_DATA_JIMYOUIN = [], [], [], []
@@ -549,7 +550,7 @@ def find_closest_leap_year(year: int) -> int:
     return year + (4 - year % 4)
 
 
-def find_eras_with_year(year: int) -> set["Era"]:
+def find_eras_with_year(year: int) -> Set["Era"]:
     """
     Find all eras that contains `year`.
     Args:

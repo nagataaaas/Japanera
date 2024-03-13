@@ -1,13 +1,13 @@
 import calendar
 import datetime
 import time
+from _strptime import (_CACHE_MAX_SIZE, IGNORECASE, LocaleTime, _cache_lock,
+                       _calc_julian_from_U_or_W, _getlang, _regex_cache,
+                       re_compile, re_escape)
 from calendar import monthrange
 from collections import defaultdict
 from typing import List, Optional, Set, Tuple
 
-from _strptime import (_CACHE_MAX_SIZE, IGNORECASE, LocaleTime, _cache_lock,
-                       _calc_julian_from_U_or_W, _getlang, _regex_cache,
-                       re_compile, re_escape)
 from kanjize import kanji2number
 
 _ERA_DATA_COMMON, _ERA_DATA_GENERAL, _ERA_DATA_DAIKAKUJI, _ERA_DATA_JIMYOUIN = [], [], [], []
@@ -440,10 +440,10 @@ def _strptime(data_string, format="%a %b %d %H:%M:%S %Y"):
             julian += yday
     return (era_kanji, era_english, era_english_vowel_shortened,
             era_head, relative_year), \
-           (year, month, day,
-            hour, minute, second,
-            weekday, julian, tz, tzname,
-            gmtoff), fraction, gmtoff_fraction
+        (year, month, day,
+         hour, minute, second,
+         weekday, julian, tz, tzname,
+         gmtoff), fraction, gmtoff_fraction
 
 
 def find_era_and_date(era_kanji: Optional[str] = None,
@@ -559,7 +559,7 @@ def find_eras_with_year(year: int) -> Set["Era"]:
     Returns: set of Era that contains `year`
     """
 
-    def _find_first_era_after_year_index(era_list: list["Era"]) -> int:
+    def _find_first_era_after_year_index(era_list: List["Era"]) -> int:
         # return the index of first era that starts after `year`
         ok = len(era_list)
         ng = -1

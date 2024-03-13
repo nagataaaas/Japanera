@@ -45,6 +45,7 @@ setup(name=about["__title__"],
       install_requires=["kanjize==1.4.0"],
       packages=["japanera"],
       zip_safe=False,
+      setup_requires=['wheel'],
       platforms="any",
       classifiers=[
           "Development Status :: 4 - Beta",

@@ -1,3 +1,6 @@
+# 2.1.1
+- fix type annotation. (pointed out by SeasonedMiso)
+
 # 2.1.0
 - support Python3.12. (contributed by mytabata)
 - fix type annotation. (pointed out by tnagano22)

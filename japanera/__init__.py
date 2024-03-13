@@ -9,7 +9,7 @@
     [GitHub](https://github.com/nagataaaas/Japanera)
     [ReadTheDocs](https://japanera.readthedocs.io/en/latest/)
 
-    :copyright: (c) 2019-2023 by Yamato Nagata.
+    :copyright: (c) 2019-2024 by Yamato Nagata.
     :license: MIT.
 """
 

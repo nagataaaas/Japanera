@@ -91,10 +91,10 @@ print(era_datetime.strftime("%-K(%-e)%-Y年%m月%d日(%-a) %H時"))  # 応永(Oe
 | `%-E`     | Era's name in English                                                                       | Reiwa, Heisei, Shouwa, e.t.c. |
 | `%-e`     | Era's name in English but redundant vowels(ou, ei) are shortened. e.g. 'Shouwa' -> 'Showa'. | Reiwa, Heisei, Showa, e.t.c.  |
 | `%-h`     | Head of Era's name in English.                                                              | R, H, S, e.t.c.               |
-| `%-n`     | Relative year to beginning of Era in Kanji. parse '元' as 1. Up to 99.                       | 元, 一, 二, ..., 九十九,            |
-| `%-N`     | Relative year to beginning of Era in Kanji. parse '元' as 1. Up to 9999.                     | 元, 一, 二, ..., 九千九百九十九         |
-| `%-y`     | Relative year to beginning of Era in Arabic number. parse '元' as 1. Up to 99.               | 元, 1, 2, ..., 99,             |
-| `%-Y`     | Relative year to beginning of Era in Arabic number. parse '元' as 1. Up to 9999.             | 元, 1, 2, ..., 9999            |
+| `%-n`     | Relative year to beginning of Era in Kanji. parse '元' as 1. Up to 99.                       | 元, 二, ..., 九十九,            |
+| `%-N`     | Relative year to beginning of Era in Kanji. parse '元' as 1. Up to 9999.                     | 元, 二, ..., 九千九百九十九         |
+| `%-y`     | Relative year to beginning of Era in Arabic number. parse '元' as 1. Up to 99.               | 元, 2, ..., 99,             |
+| `%-Y`     | Relative year to beginning of Era in Arabic number. parse '元' as 1. Up to 9999.             | 元, 2, ..., 9999            |
 | `%-m`     | Month of the date in Kanji.                                                                 | 一, 二, ..., 十二                 |
 | `%-d`     | Day of the date in Kanji.                                                                   | 一, 二, ..., 三十一                |
 | `%-a`     | Weekday of the date in Kanji.                                                               | 月, 火, 水, 木, 金, 土, 日           |

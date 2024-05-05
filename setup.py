@@ -27,6 +27,11 @@ from os import path
 
 from setuptools import setup
 
+
+def _requires_from_file(filename):
+    return open(filename).read().splitlines()
+
+
 about = {}
 with open("japanera/__about__.py") as f:
     exec(f.read(), about)
@@ -42,7 +47,7 @@ setup(name=about["__title__"],
       description=about["__description__"],
       long_description=__doc__,
       long_description_content_type="text/markdown",
-      install_requires=["kanjize==1.4.0"],
+      install_requires=_requires_from_file('requirements.txt'),
       packages=["japanera"],
       zip_safe=False,
       setup_requires=['wheel'],

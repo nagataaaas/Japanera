@@ -6,3 +6,6 @@ dist
 Japanera.egg-info
 .eggs
 __pycache__
+.claude
+CLAUDE.md
+.venv

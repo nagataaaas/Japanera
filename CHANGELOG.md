@@ -1,3 +1,9 @@
+# 2.1.3
+- fix parsing error arround 1831~1860 (pointed out by chura-K)
+
+# 2.1.2
+- upgrade dependency
+
 # 2.1.1
 - fix type annotation. (pointed out by SeasonedMiso)
 
